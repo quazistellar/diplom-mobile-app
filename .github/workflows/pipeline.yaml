@@ -2,7 +2,7 @@ name: Build Flutter IPA
 
 on:
   push:
-    branches: [ "master" ]  
+    branches: [ "master" ]
   workflow_dispatch:
 
 jobs:
@@ -22,8 +22,14 @@ jobs:
       - name: Build IPA
         run: flutter build ipa --release --no-codesign
         
+      - name: Find IPA file
+        run: |
+          echo "Looking for IPA files..."
+          find . -name "*.ipa" -type f
+          echo "=== SEARCH COMPLETE ==="
+          
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: my-app-ipa
-          path: build/ios/ipa/*.ipa
+          path: "**/*.ipa" 
