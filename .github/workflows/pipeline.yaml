@@ -18,18 +18,24 @@ jobs:
       
       - name: Install dependencies
         run: flutter pub get
-        
-      - name: Build IPA
-        run: flutter build ipa --release --no-codesign
-        
-      - name: Find IPA file
+      
+      - name: Build iOS app
+        run: flutter build ios --release --no-codesign
+      
+      - name: Create IPA from .app
         run: |
-          echo "Looking for IPA files..."
-          find . -name "*.ipa" -type f
-          echo "=== SEARCH COMPLETE ==="
-          
+          mkdir -p Payload
+          APP_PATH=$(find . -name "Runner.app" -type d | head -1)
+          echo "Found app at: $APP_PATH"
+          cp -r "$APP_PATH" Payload/
+          zip -r app.ipa Payload/
+          ls -la app.ipa
+          mkdir -p build/ios/ipa
+          mv app.ipa build/ios/ipa/
+      
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: my-app-ipa
-          path: "**/*.ipa" 
+          path: build/ios/ipa/app.ipa
+          if-no-files-found: error
