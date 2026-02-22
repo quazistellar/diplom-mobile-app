@@ -1,0 +1,480 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
+import '../utils/snackbar_helper.dart';
+
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _patronymicController = TextEditingController();
+  final _usernameController = TextEditingController();
+  
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _isAgreed = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _patronymicController.dispose();
+    _usernameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Регистрация'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            
+            Center(
+              child: Column(
+                children: [
+                  Icon(Icons.school, color: theme.colorScheme.primary, size: 48),
+                  const SizedBox(height: 8),
+                  Text(
+                    'UNIREAX',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: theme.colorScheme.primary,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            Text(
+              'Создайте новый аккаунт',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onBackground,
+              ),
+            ),
+            
+            const SizedBox(height: 8),
+            
+            Text(
+              'Заполните все поля для регистрации',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                fontSize: 14,
+              ),
+            ),
+            
+            const SizedBox(height: 32),
+            
+            if (authProvider.errorMessage != null) 
+              _buildError(authProvider, theme),
+            
+            Card(
+              color: theme.cardTheme.color,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _firstNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Имя',
+                        labelStyle: TextStyle(
+                          fontSize: 14, 
+                        ),
+                        hintText: 'Иван',
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withOpacity(0.4),
+                        ),
+                        prefixIcon: const Icon(Icons.person),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    TextField(
+                      controller: _lastNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Фамилия',
+                        labelStyle: TextStyle(
+                          fontSize: 14, 
+                        ),
+                        hintText: 'Иванов',
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withOpacity(0.4),
+                        ),
+                        prefixIcon: const Icon(Icons.person_outline),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    TextField(
+                      controller: _patronymicController,
+                      decoration: InputDecoration(
+                        labelText: 'Отчество (необязательно)',
+                        labelStyle: TextStyle(
+                          fontSize: 14, 
+                        ),
+                        hintText: 'Иванович',
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withOpacity(0.4),
+                        ),
+                        prefixIcon: const Icon(Icons.person),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    TextField(
+                      controller: _usernameController,
+                      decoration: InputDecoration(
+                        labelText: 'Имя пользователя',
+                        labelStyle: TextStyle(
+                          fontSize: 14, 
+                        ),
+                        hintText: 'ivanov123',
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withOpacity(0.4),
+                        ),
+                        prefixIcon: const Icon(Icons.badge),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        labelText: 'Электронная почта',
+                        labelStyle: TextStyle(
+                          fontSize: 14, 
+                        ),
+                        hintText: 'example@email.com',
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withOpacity(0.4),
+                        ),
+                        prefixIcon: const Icon(Icons.email),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Пароль',
+                        labelStyle: TextStyle(
+                          fontSize: 14, 
+                        ),
+                        hintText: 'Минимум 8 символов',
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withOpacity(0.4),
+                        ),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    TextField(
+                      controller: _confirmPasswordController,
+                      obscureText: _obscureConfirmPassword,
+                      decoration: InputDecoration(
+                        labelText: 'Подтверждение пароля',
+                        labelStyle: TextStyle(
+                          fontSize: 14, 
+                        ),
+                        hintText: 'Введите пароль еще раз',
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withOpacity(0.4),
+                        ),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: theme.dividerColor),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Checkbox(
+                                value: _isAgreed,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isAgreed = value ?? false;
+                                  });
+                                },
+                                activeColor: theme.primaryColor,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Нажимая на кнопку "Зарегистрироваться", вы даёте своё согласие на использование ваших персональных данных',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'в соответствие с Федеральным законом от 27.07.2006 №152-ФЗ «О персональных данных» и соглашаетесь с политикой ресурса Unireax',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    if (authProvider.isLoading)
+                      _buildLoading(theme)
+                    else
+                      _buildRegisterButton(authProvider),
+                    
+                    const SizedBox(height: 16),
+                    
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Уже есть аккаунт? Войти',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildError(AuthProvider authProvider, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.red.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error, color: Colors.red, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              authProvider.errorMessage!,
+              style: const TextStyle(color: Colors.red, fontSize: 14),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: () => authProvider.clearError(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoading(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: CircularProgressIndicator(color: theme.colorScheme.primary),
+      ),
+    );
+  }
+
+  Widget _buildRegisterButton(AuthProvider authProvider) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _register,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: const Text(
+          'ЗАРЕГИСТРИРОВАТЬСЯ',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _register() async {
+    if (!_isAgreed) {
+      SnackBarHelper.showWarning(context, 'Необходимо принять соглашение на обработку персональных данных');
+      return;
+    }
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final patronymic = _patronymicController.text.trim();
+    final username = _usernameController.text.trim();
+
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty || firstName.isEmpty || 
+        lastName.isEmpty || username.isEmpty) {
+      SnackBarHelper.showWarning(context, 'Заполните все обязательные поля');
+      return;
+    }
+
+    if (password.length < 8) {
+      SnackBarHelper.showWarning(context, 'Пароль должен содержать минимум 8 символов');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      SnackBarHelper.showWarning(context, 'Пароли не совпадают');
+      return;
+    }
+
+    if (username.length < 3) {
+      SnackBarHelper.showWarning(context, 'Имя пользователя должно содержать минимум 3 символа');
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailRegex.hasMatch(email)) {
+      SnackBarHelper.showWarning(context, 'Введите корректный email адрес');
+      return;
+    }
+
+    try {
+      final authProvider = context.read<AuthProvider>();
+      
+      await authProvider.register(
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        username: username,
+        patronymic: patronymic.isNotEmpty ? patronymic : null,
+      );
+
+      if (context.read<AuthProvider>().isAuthenticated && mounted) {
+        SnackBarHelper.showSuccess(context, 'Аккаунт успешно создан!');
+        Navigator.pushReplacementNamed(context, '/main');
+      }
+    } catch (e) {
+      String errorMessage = 'Ошибка регистрации';
+      
+      final errorStr = e.toString();
+      if (errorStr.contains('already exists') || errorStr.contains('уже существует')) {
+        if (errorStr.contains('username') || errorStr.contains('имя пользователя')) {
+          errorMessage = 'Имя пользователя уже занято';
+        } else if (errorStr.contains('email') || errorStr.contains('почта')) {
+          errorMessage = 'Email уже зарегистрирован';
+        }
+      } else if (errorStr.contains('detail:')) {
+        errorMessage = errorStr.split('detail:').last.trim();
+      } else if (errorStr.contains('400')) {
+        errorMessage = 'Некорректные данные регистрации';
+      } else if (errorStr.contains('Connection') || errorStr.contains('timeout')) {
+        errorMessage = 'Ошибка подключения к серверу';
+      }
+      
+      SnackBarHelper.showError(context, errorMessage);
+    }
+  }
+}

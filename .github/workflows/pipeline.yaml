@@ -1,0 +1,29 @@
+name: Build Flutter IPA
+
+on:
+  push:
+    branches: [ "master" ]  
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: flutter pub get
+        
+      - name: Build IPA
+        run: flutter build ipa --release --no-codesign
+        
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-app-ipa
+          path: build/ios/ipa/*.ipa
