@@ -5,6 +5,7 @@ import '../../providers/certificate_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/progress_provider.dart';
 
+/// данный класс отображает экран проверки возможности получения сертификата
 class CertificateEligibilityScreen extends StatefulWidget {
   final int courseId;
   final String courseName;
@@ -30,6 +31,7 @@ class _CertificateEligibilityScreenState extends State<CertificateEligibilityScr
     _checkEligibility();
   }
 
+  /// данный метод проверяет возможность получения сертификата
   Future<void> _checkEligibility() async {
     setState(() => _isLoading = true);
 
@@ -62,6 +64,7 @@ class _CertificateEligibilityScreenState extends State<CertificateEligibilityScr
     }
   }
 
+  /// данный метод выпускает сертификат
   Future<void> _issueCertificate() async {
     setState(() => _isIssuing = true);
 
@@ -112,7 +115,7 @@ class _CertificateEligibilityScreenState extends State<CertificateEligibilityScr
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Ошибка получения сертификата: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text('Ошибка получения сертификата: ${e.toString().replaceFirst('Exception: ', '')}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 4),
           ),
@@ -181,6 +184,7 @@ class _CertificateEligibilityScreenState extends State<CertificateEligibilityScr
     );
   }
 
+  /// данный метод создает содержимое экрана проверки сертификата
   Widget _buildEligibilityContent(ThemeData theme) {
     final isEligible = _eligibilityData?['eligible'] == true;
     final progress = _eligibilityData?['progress'] ?? 0.0;
@@ -457,6 +461,7 @@ class _CertificateEligibilityScreenState extends State<CertificateEligibilityScr
     );
   }
 
+  /// данный метод создает виджет элемента прогресса
   Widget _buildProgressItem({
     required IconData icon,
     required String label,
@@ -485,6 +490,7 @@ class _CertificateEligibilityScreenState extends State<CertificateEligibilityScr
     );
   }
 
+  /// данный метод создает виджет деталей прогресса
   Widget _buildDetailItem({
     required String label,
     required int completed,
@@ -507,7 +513,7 @@ class _CertificateEligibilityScreenState extends State<CertificateEligibilityScr
               ),
             ),
             Text(
-              isComplete ? '✅ Завершено' : '⏳ В процессе',
+              isComplete ? 'Завершено' : 'В процессе',
               style: TextStyle(
                 color: isComplete ? Colors.green : Colors.orange,
                 fontSize: 12,
@@ -541,6 +547,7 @@ class _CertificateEligibilityScreenState extends State<CertificateEligibilityScr
     );
   }
 
+  /// данный метод создает виджет условия получения сертификата
   Widget _buildConditionItem({
     required IconData icon,
     required String label,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// данный класс представляет модель теста
 class Test {
   final int id;
   final String name;
@@ -27,6 +28,7 @@ class Test {
     required this.rawData,
   });
 
+  /// данная функция создает объект теста из JSON
   factory Test.fromJson(Map<String, dynamic> json) {
     return Test(
       id: json['id'] ?? 0,
@@ -45,6 +47,7 @@ class Test {
     );
   }
 
+  /// данная функция возвращает статус прохождения теста
   bool get isPassed {
     if (userResult == null) return false;
     
@@ -64,23 +67,31 @@ class Test {
     }
   }
 
+  /// данная функция возвращает текстовое описание статуса
   String getStatusText() {
     if (userResult == null) return 'Не начат';
     if (isPassed) return 'Сдан';
     return 'Не сдан';
   }
 
+  /// данная функция возвращает цвет статуса
   Color getStatusColor() {
     if (userResult == null) return Colors.grey;
     if (isPassed) return Colors.green;
     return Colors.red;
   }
 
+  /// данная функция возвращает количество использованных попыток
   int get attemptsUsed => userResult?.attemptNumber ?? 0;
+  
+  /// данная функция возвращает количество оставшихся попыток
   int get attemptsLeft => maxAttempts != null ? maxAttempts! - attemptsUsed : 0;
+  
+  /// данная функция проверяет, доступна ли попытка
   bool get canAttempt => maxAttempts == null || attemptsUsed < maxAttempts!;
 }
 
+/// данный класс представляет результат теста пользователя
 class TestUserResult {
   final int? id;
   final int finalScore;
@@ -100,6 +111,7 @@ class TestUserResult {
     required this.rawData,
   });
 
+  /// данная функция создает объект результата теста из JSON
   factory TestUserResult.fromJson(Map<String, dynamic> json) {
     return TestUserResult(
       id: json['id'],
@@ -122,6 +134,7 @@ class TestUserResult {
   }
 }
 
+/// данный класс представляет вопрос теста
 class TestQuestion {
   final int id;
   final String questionText;
@@ -141,6 +154,7 @@ class TestQuestion {
     required this.rawData,
   });
 
+  /// данная функция создает объект вопроса теста из JSON
   factory TestQuestion.fromJson(Map<String, dynamic> json) {
     String answerType = 'текст';
     if (json['answer_type'] is String) {
@@ -195,12 +209,20 @@ class TestQuestion {
     return 'текст';
   }
 
+  /// данная функция проверяет, является ли вопрос с одним ответом
   bool get isSingleChoice => answerType == 'один ответ';
+  
+  /// данная функция проверяет, является ли вопрос с несколькими ответами
   bool get isMultipleChoice => answerType == 'несколько ответов';
+  
+  /// данная функция проверяет, является ли вопрос сопоставлением
   bool get isMatching => answerType == 'сопоставление';
+  
+  /// данная функция проверяет, является ли вопрос текстовым
   bool get isText => answerType == 'текст';
 }
 
+/// данный класс представляет вариант ответа в тесте
 class TestChoiceOption {
   final int id;
   final String optionText;
@@ -212,6 +234,7 @@ class TestChoiceOption {
     this.isCorrect,
   });
 
+  /// данная функция создает объект варианта ответа из JSON
   factory TestChoiceOption.fromJson(Map<String, dynamic> json) {
     return TestChoiceOption(
       id: json['id'] ?? 0,
@@ -221,6 +244,7 @@ class TestChoiceOption {
   }
 }
 
+/// данный класс представляет пару для сопоставления
 class TestMatchingPair {
   final int id;
   final String leftText;
@@ -232,6 +256,7 @@ class TestMatchingPair {
     this.rightText,
   });
 
+  /// данная функция создает объект пары для сопоставления из JSON
   factory TestMatchingPair.fromJson(Map<String, dynamic> json) {
     return TestMatchingPair(
       id: json['id'] ?? 0,
@@ -241,6 +266,7 @@ class TestMatchingPair {
   }
 }
 
+/// данный класс представляет попытку прохождения теста
 class TestAttempt {
   final int id;
   final int attemptNumber;
@@ -266,6 +292,7 @@ class TestAttempt {
     required this.percentage,
   });
 
+  /// данная функция создает объект попытки из JSON
   factory TestAttempt.fromJson(Map<String, dynamic> json) {
     final totalScore = json['total_score'] ?? 0;
     final maxScore = json['max_score'] ?? 100;
@@ -284,12 +311,14 @@ class TestAttempt {
     );
   }
 
+  /// данная функция проверяет, пройдена ли попытка
   bool get isPassedByScore {
     if (isPassed != null) return isPassed!;
     return percentage >= 50;
   }
 }
 
+/// данный класс представляет детали результата теста
 class TestResultDetail {
   final TestResultInfo testResult;
   final List<TestQuestionResult> questions;
@@ -299,6 +328,7 @@ class TestResultDetail {
     required this.questions,
   });
 
+  /// данная функция создает объект деталей результата из JSON
   factory TestResultDetail.fromJson(Map<String, dynamic> json) {
     return TestResultDetail(
       testResult: TestResultInfo.fromJson(json['test_result'] ?? {}),
@@ -309,6 +339,7 @@ class TestResultDetail {
   }
 }
 
+/// данный класс представляет информацию о результате теста
 class TestResultInfo {
   final int id;
   final String testName;
@@ -334,6 +365,7 @@ class TestResultInfo {
     this.isPassed,
   });
 
+  /// данная функция создает объект информации о результате из JSON
   factory TestResultInfo.fromJson(Map<String, dynamic> json) {
     return TestResultInfo(
       id: json['id'] ?? 0,
@@ -349,7 +381,10 @@ class TestResultInfo {
     );
   }
 
+  /// данная функция возвращает процент выполнения
   int get percentage => maxScore > 0 ? (totalScore / maxScore * 100).toInt() : 0;
+  
+  /// данная функция проверяет, пройден ли тест по баллам
   bool get isPassedByScore {
     if (isPassed != null) return isPassed!;
     if (gradingForm == 'pass_fail') return false;
@@ -361,6 +396,7 @@ class TestResultInfo {
   }
 }
 
+/// данный класс представляет результат ответа на вопрос
 class TestQuestionResult {
   final int id;
   final String questionText;
@@ -384,6 +420,7 @@ class TestQuestionResult {
     this.pairs,
   });
 
+  /// данная функция создает объект результата вопроса из JSON
   factory TestQuestionResult.fromJson(Map<String, dynamic> json) {
     return TestQuestionResult(
       id: json['id'] ?? 0,
@@ -403,6 +440,7 @@ class TestQuestionResult {
   }
 }
 
+/// данный класс представляет результат выбора варианта
 class TestChoiceResult {
   final int id;
   final String optionText;
@@ -418,6 +456,7 @@ class TestChoiceResult {
     required this.isUserCorrect,
   });
 
+  /// данная функция создает объект результата выбора из JSON
   factory TestChoiceResult.fromJson(Map<String, dynamic> json) {
     return TestChoiceResult(
       id: json['id'] ?? 0,
@@ -429,6 +468,7 @@ class TestChoiceResult {
   }
 }
 
+/// данный класс представляет результат сопоставления
 class TestMatchingResult {
   final int id;
   final String leftText;
@@ -444,6 +484,7 @@ class TestMatchingResult {
     required this.isCorrect,
   });
 
+  /// данная функция создает объект результата сопоставления из JSON
   factory TestMatchingResult.fromJson(Map<String, dynamic> json) {
     return TestMatchingResult(
       id: json['id'] ?? 0,

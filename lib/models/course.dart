@@ -1,3 +1,4 @@
+/// данный класс представляет модель курса
 class Course {
   final int id;
   final String name;
@@ -41,6 +42,7 @@ class Course {
     required this.rawData,
   });
 
+  /// данная функция создает объект курса из JSON
   factory Course.fromJson(Map<String, dynamic> json) {
     return Course(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
@@ -67,6 +69,7 @@ class Course {
     );
   }
 
+  /// данная функция парсит цену из различных форматов
   static double _parsePrice(dynamic value) {
     if (value == null) return 0.0;
     if (value is int) return value.toDouble();
@@ -79,6 +82,7 @@ class Course {
     return 0.0;
   }
 
+  /// данная функция парсит целое число из различных форматов
   static int _parseInt(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value;
@@ -90,6 +94,7 @@ class Course {
     return 0;
   }
 
+  /// данная функция парсит рейтинг из различных полей
   static double _parseRating(Map<String, dynamic> json) {
     final rating = json['calculated_rating'] ?? 
                    json['average_rating'] ?? 
@@ -101,18 +106,23 @@ class Course {
     return 0.0;
   }
 
+  /// данная функция проверяет, является ли курс бесплатным
   bool get isFree => price == 0;
+  
+  /// данная функция возвращает отформатированную цену
   String get displayPrice => isFree ? 'Бесплатно' : '${price.toStringAsFixed(2)} ₽';
 
   Object? toJson() {}
 }
 
+/// данный класс представляет категорию курса
 class CourseCategory {
   final int id;
   final String name;
 
   CourseCategory({required this.id, required this.name});
 
+  /// данная функция создает объект категории из JSON
   factory CourseCategory.fromJson(Map<String, dynamic> json) {
     return CourseCategory(
       id: json['id'] ?? 0,
@@ -121,12 +131,14 @@ class CourseCategory {
   }
 }
 
+/// данный класс представляет тип курса
 class CourseType {
   final int id;
   final String name;
 
   CourseType({required this.id, required this.name});
 
+  /// данная функция создает объект типа из JSON
   factory CourseType.fromJson(Map<String, dynamic> json) {
     return CourseType(
       id: json['id'] ?? 0,

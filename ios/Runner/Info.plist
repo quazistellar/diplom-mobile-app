@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 
-	<!-- Deep Linking -->
+	<!-- deep linking -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -39,11 +39,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	
-	<!-- НАСТРОЙКИ ДЛЯ WEBVIEW - ДОБАВЬТЕ ЭТО -->
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
 	
-	<!-- РАЗРЕШЕНИЯ ДЛЯ HTTP/HTTPS -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -54,7 +52,6 @@
 		<true/>
 	</dict>
 	
-	<!-- НАСТРОЙКИ ДЛЯ КАМЕРЫ/МИКРОФОНА (ЕСЛИ НУЖНО ДЛЯ ВИДЕО) -->
 	<key>NSCameraUsageDescription</key>
 	<string>Для видео-конференций</string>
 	<key>NSMicrophoneUsageDescription</key>

@@ -8,6 +8,7 @@ import '../widgets/setting_item.dart';
 import '../utils/snackbar_helper.dart';
 import 'base_navigation_screen.dart';
 
+/// данный класс отображает экран настроек приложения
 class SettingsScreen extends BaseNavigationScreen {
   const SettingsScreen({super.key});
 
@@ -59,6 +60,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     );
   }
 
+  /// данный метод создает карточку профиля
   Widget _buildProfileCard(
       dynamic user, ThemeData theme, AuthProvider authProvider) {
     String userName = 'Иван Иванов';
@@ -131,6 +133,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     );
   }
 
+  /// данный метод создает раздел внешнего вида
   Widget _buildAppearanceSection(ThemeManager themeManager) {
     final theme = themeManager.currentTheme;
     final isDark = themeManager.themeMode == ThemeMode.dark;
@@ -231,6 +234,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
   //   );
   // }
 
+  /// данный метод создает раздел аккаунта
   Widget _buildAccountSection(ThemeManager themeManager, AuthProvider authProvider) {
     final theme = themeManager.currentTheme;
 
@@ -292,6 +296,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     );
   }
 
+  /// данный метод создает информацию о версии
   Widget _buildVersionInfo(ThemeData theme) {
     return Center(
       child: Text(
@@ -301,6 +306,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     );
   }
 
+  /// данный метод возвращает иконку размера шрифта
   Widget _getFontSizeIcon(String fontSize) {
     switch (fontSize) {
       case 'Мелкий':
@@ -334,6 +340,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     }
   }
 
+  /// данный метод показывает диалог выбора размера шрифта
   void _showFontSizeDialog(ThemeManager themeManager) {
     final theme = themeManager.currentTheme;
 
@@ -415,6 +422,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     );
   }
 
+  /// данный метод создает опцию размера шрифта
   Widget _buildFontSizeOption({
     required BuildContext context,
     required ThemeData theme,
@@ -471,6 +479,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     );
   }
 
+  /// данный метод показывает диалог редактирования профиля
   Future<void> _showEditProfileDialog(
       BuildContext context, ThemeData theme, AuthProvider authProvider) async {
     final user = authProvider.currentUser;
@@ -588,6 +597,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     );
   }
 
+  /// данный метод показывает диалог смены пароля
   Future<void> _showChangePasswordDialog(
       BuildContext context, ThemeData theme, AuthProvider authProvider) async {
     final oldPasswordController = TextEditingController();
@@ -745,6 +755,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     );
   }
 
+  /// данный метод выполняет выход из аккаунта
   Future<void> _logout(BuildContext context) async {
     final themeManager = Provider.of<ThemeManager>(context, listen: false);
     final theme = themeManager.currentTheme;

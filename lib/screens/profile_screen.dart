@@ -8,10 +8,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:file_picker/file_picker.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_client.dart';
 
+/// данный класс отображает экран профиля пользователя
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -37,6 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadFonts();
   }
 
+  /// данный метод загружает шрифты для PDF
   Future<void> _loadFonts() async {
     try {
       final fontData = await rootBundle.load("assets/fonts/arial.ttf");
@@ -52,13 +56,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  /// данный метод загружает данные профиля
   Future<void> _loadProfileData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
       final data = await _apiClient.get<Map<String, dynamic>>('/profile/');
       
-      
+      if (!mounted) return;
       setState(() {
         _profileData = data['user'] ?? {};
         _paymentHistory = data['payment_history'] ?? [];
@@ -75,10 +81,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
+  /// данный метод форматирует дату
   String _formatDate(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return '—';
     try {
@@ -89,6 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  /// данный метод генерирует номер чека
   String _generateReceiptNumber(String paymentId, String courseId, String date) {
     final uuid = _uuid.v4().substring(0, 8).toUpperCase();
     
@@ -100,7 +110,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _generateAndSaveReceipt({
+  /// данный метод генерирует PDF чек
+  Future<Uint8List> _generatePdf({
     required String paymentId,
     required String receiptNumber,
     required String courseId,
@@ -108,198 +119,164 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String amount,
     required String date,
   }) async {
-    try {
-      if (!mounted) return;
-      
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+    final formattedDate = _formatDate(date);
+    final userName = _profileData['full_name'] ?? 
+                    '${_profileData['last_name'] ?? ''} ${_profileData['first_name'] ?? ''}'.trim();
+    final userEmail = _profileData['email'] ?? 'Не указан';
+    
+    final pdf = pw.Document();
 
-      while (_arialRegular == null || _arialBold == null) {
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
-
-      final formattedDate = _formatDate(date);
-      final userName = _profileData['full_name'] ?? 
-                      '${_profileData['last_name'] ?? ''} ${_profileData['first_name'] ?? ''}'.trim();
-      final userEmail = _profileData['email'] ?? 'Не указан';
-      final pdf = pw.Document();
-
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(32),
-          build: (context) {
-            return pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Container(
-                  width: double.infinity,
-                  padding: const pw.EdgeInsets.all(20),
-                  decoration: pw.BoxDecoration(
-                    gradient: pw.LinearGradient(
-                      colors: [
-                        PdfColor.fromInt(0xFF7B7FD5),
-                        PdfColor.fromInt(0xFF86A8E7),
-                        PdfColor.fromInt(0xFF91EAE4),
-                      ],
-                      begin: pw.Alignment.centerLeft,
-                      end: pw.Alignment.centerRight,
-                    ),
-                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(10)),
-                  ),
-                  child: pw.Column(
-                    children: [
-                      pw.Text(
-                        'UNIREAX',
-                        style: pw.TextStyle(
-                          font: _arialBold,
-                          fontSize: 32,
-                          color: PdfColors.white,
-                        ),
-                      ),
-                      pw.Text(
-                        'Образовательная платформа',
-                        style: pw.TextStyle(
-                          font: _arialRegular,
-                          fontSize: 14,
-                          color: PdfColors.white,
-                        ),
-                      ),
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(20),
+                decoration: pw.BoxDecoration(
+                  gradient: pw.LinearGradient(
+                    colors: [
+                      PdfColor.fromInt(0xFF7B7FD5),
+                      PdfColor.fromInt(0xFF86A8E7),
+                      PdfColor.fromInt(0xFF91EAE4),
                     ],
+                    begin: pw.Alignment.centerLeft,
+                    end: pw.Alignment.centerRight,
+                  ),
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(10)),
+                ),
+                child: pw.Column(
+                  children: [
+                    pw.Text(
+                      'UNIREAX',
+                      style: pw.TextStyle(
+                        font: _arialBold,
+                        fontSize: 32,
+                        color: PdfColors.white,
+                      ),
+                    ),
+                    pw.Text(
+                      'Образовательная платформа',
+                      style: pw.TextStyle(
+                        font: _arialRegular,
+                        fontSize: 14,
+                        color: PdfColors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              pw.SizedBox(height: 20),
+
+              pw.Center(
+                child: pw.Text(
+                  'ЧЕК ОБ ОПЛАТЕ КУРСА',
+                  style: pw.TextStyle(
+                    font: _arialBold,
+                    fontSize: 24,
+                    color: PdfColor.fromInt(0xFF151D49),
                   ),
                 ),
+              ),
 
-                pw.SizedBox(height: 20),
+              pw.SizedBox(height: 30),
 
-                pw.Center(
-                  child: pw.Text(
-                    'ЧЕК ОБ ОПЛАТЕ КУРСА',
+              _buildInfoBlock(
+                title: 'Информация о платеже',
+                items: [
+                  {'label': 'Номер платежа:', 'value': paymentId.isNotEmpty ? paymentId : 'Не указан'},
+                  {'label': 'Дата оплаты:', 'value': formattedDate},
+                  {'label': 'Статус:', 'value': 'Оплачено'},
+                ],
+              ),
+
+              pw.SizedBox(height: 20),
+
+              _buildInfoBlock(
+                title: 'Информация о курсе',
+                items: [
+                  {'label': 'Название курса:', 'value': courseName},
+                  {'label': 'Сумма (в рублях):', 'value': '$amount'},
+                ],
+              ),
+
+              pw.SizedBox(height: 20),
+
+              _buildInfoBlock(
+                title: 'Информация о пользователе',
+                items: [
+                  {'label': 'ФИО:', 'value': userName},
+                  {'label': 'Email:', 'value': userEmail},
+                ],
+              ),
+
+              pw.SizedBox(height: 30),
+
+              pw.Row(
+                children: [
+                  pw.Text(
+                    'Итоговая сумма (в рублях):',
                     style: pw.TextStyle(
                       font: _arialBold,
-                      fontSize: 24,
+                      fontSize: 18,
+                      color: PdfColor.fromInt(0xFF7B7FD5),
+                    ),
+                  ),
+                  pw.SizedBox(width: 20),
+                  pw.Text(
+                    '$amount',
+                    style: pw.TextStyle(
+                      font: _arialBold,
+                      fontSize: 22,
                       color: PdfColor.fromInt(0xFF151D49),
                     ),
                   ),
-                ),
+                ],
+              ),
 
-                pw.SizedBox(height: 30),
+              pw.SizedBox(height: 40),
 
-                _buildInfoBlock(
-                  title: 'Информация о платеже',
-                  items: [
-                    {'label': 'Номер платежа:', 'value': paymentId.isNotEmpty ? paymentId : 'Не указан'},
-                    {'label': 'Дата оплаты:', 'value': formattedDate},
-                    {'label': 'Статус:', 'value': 'Оплачено'},
-                  ],
-                ),
-
-                pw.SizedBox(height: 20),
-
-                _buildInfoBlock(
-                  title: 'Информация о курсе',
-                  items: [
-                    {'label': 'Название курса:', 'value': courseName},
-                    {'label': 'Сумма (в рублях):', 'value': '$amount'},
-                  ],
-                ),
-
-                pw.SizedBox(height: 20),
-
-                _buildInfoBlock(
-                  title: 'Информация о пользователе',
-                  items: [
-                    {'label': 'ФИО:', 'value': userName},
-                    {'label': 'Email:', 'value': userEmail},
-                  ],
-                ),
-
-                pw.SizedBox(height: 30),
-
-                pw.Row(
-                  children: [
-                    pw.Text(
-                      'Итоговая сумма (в рублях):',
+              pw.Column(
+                children: [
+                  pw.Divider(color: PdfColor.fromInt(0xFF7B7FD5)),
+                  pw.SizedBox(height: 10),
+                  pw.Center(
+                    child: pw.Text(
+                      'Чек №$receiptNumber',
                       style: pw.TextStyle(
-                        font: _arialBold,
-                        fontSize: 18,
-                        color: PdfColor.fromInt(0xFF7B7FD5),
+                        font: _arialRegular,
+                        fontSize: 10,
+                        color: PdfColors.grey700,
                       ),
                     ),
-                    pw.SizedBox(width: 20),
-                    pw.Text(
-                      '$amount',
+                  ),
+                  pw.Center(
+                    child: pw.Text(
+                      'Документ сгенерирован автоматически',
                       style: pw.TextStyle(
-                        font: _arialBold,
-                        fontSize: 22,
-                        color: PdfColor.fromInt(0xFF151D49),
+                        font: _arialRegular,
+                        fontSize: 10,
+                        color: PdfColors.grey700,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
 
-                pw.SizedBox(height: 40),
-
-                pw.Column(
-                  children: [
-                    pw.Divider(color: PdfColor.fromInt(0xFF7B7FD5)),
-                    pw.SizedBox(height: 10),
-                    pw.Center(
-                      child: pw.Text(
-                        'Чек №$receiptNumber',
-                        style: pw.TextStyle(
-                          font: _arialRegular,
-                          fontSize: 10,
-                          color: PdfColors.grey700,
-                        ),
-                      ),
-                    ),
-                    pw.Center(
-                      child: pw.Text(
-                        'Документ сгенерирован автоматически',
-                        style: pw.TextStyle(
-                          font: _arialRegular,
-                          fontSize: 10,
-                          color: PdfColors.grey700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        ),
-      );
-
-      final output = await getTemporaryDirectory();
-      final fileName = 'receipt_${receiptNumber.replaceAll('-', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf';
-      final file = File('${output.path}/$fileName');
-      await file.writeAsBytes(await pdf.save());
-
-      if (mounted) {
-        Navigator.pop(context);
-        _showReceiptOptions(file);
-      }
-
-    } catch (e) {
-      print('Ошибка создания PDF: $e');
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка при создании чека: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    return await pdf.save();
   }
 
+  /// данный метод создает блок информации для PDF
   pw.Widget _buildInfoBlock({
     required String title,
     required List<Map<String, String>> items,
@@ -356,68 +333,185 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showReceiptOptions(File file) {
+  /// данный метод генерирует и сохраняет чек в PDF
+  Future<void> _generateAndSaveReceipt({
+    required String paymentId,
+    required String receiptNumber,
+    required String courseId,
+    required String courseName,
+    required String amount,
+    required String date,
+  }) async {
+    if (!mounted) return;
+    
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      while (_arialRegular == null || _arialBold == null) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+      }
+
+      final pdfBytes = await _generatePdf(
+        paymentId: paymentId,
+        receiptNumber: receiptNumber,
+        courseId: courseId,
+        courseName: courseName,
+        amount: amount,
+        date: date,
+      );
+      
+      if (mounted) {
+        Navigator.pop(context);
+      } else {
+        return;
+      }
+
+      final fileName = 'receipt_${receiptNumber.replaceAll('-', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/$fileName');
+      await tempFile.writeAsBytes(pdfBytes);
+      
+      if (mounted) {
+        _showReceiptOptions(tempFile, fileName);
+      }
+
+    } catch (e) {
+      print('Ошибка создания PDF: $e');
+      if (mounted) {
+        try {
+          Navigator.pop(context);
+        } catch (_) {}
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка при создании чека: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// данный метод показывает опции для сохраненного чека
+  void _showReceiptOptions(File tempFile, String fileName) {
+    if (!mounted) return;
+    
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Чек создан',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+      builder: (BuildContext bottomSheetContext) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Чек создан',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.insert_drive_file, color: Colors.blue),
-              title: const Text('Открыть чек'),
-              onTap: () {
-                Navigator.pop(context);
-                OpenFilex.open(file.path);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.share, color: Colors.green),
-              title: const Text('Поделиться'),
-              onTap: () {
-                Navigator.pop(context);
-                Share.shareXFiles([XFile(file.path)], text: 'Чек об оплате');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.save, color: Colors.orange),
-              title: const Text('Сохранить в файлы'),
-              onTap: () async {
-                Navigator.pop(context);
-                final directory = await getApplicationDocumentsDirectory();
-                final fileName = file.path.split('/').last;
-                final newPath = '${directory.path}/$fileName';
-                await file.copy(newPath);
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Чек сохранен в папку приложения'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Закрыть'),
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.insert_drive_file, color: Colors.blue),
+                title: const Text('Открыть чек'),
+                onTap: () {
+                  Navigator.pop(bottomSheetContext);
+                  OpenFilex.open(tempFile.path);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.share, color: Colors.green),
+                title: const Text('Поделиться'),
+                onTap: () {
+                  Navigator.pop(bottomSheetContext);
+                  Share.shareXFiles([XFile(tempFile.path)], text: 'Чек об оплате');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.save, color: Colors.orange),
+                title: const Text('Сохранить в файлы'),
+                onTap: () async {
+                  Navigator.pop(bottomSheetContext);
+                  
+                  try {
+                    String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+                      dialogTitle: 'Выберите папку для сохранения',
+                    );
+
+                    if (!mounted) return;
+
+                    if (selectedDirectory != null) {
+                      final savePath = '$selectedDirectory/$fileName';
+                      final savedFile = File(savePath);
+                      await tempFile.copy(savedFile.path);
+                      
+                      if (await savedFile.exists()) {
+                        try {
+                          if (await tempFile.exists()) {
+                            await tempFile.delete();
+                          }
+                        } catch (e) {
+                          print('Error deleting temp file: $e');
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Файл сохранен: $savePath'),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 5),
+                          ),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Сохранение отменено'),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    print('Error saving file: $e');
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Ошибка при сохранении: ${e.toString()}'),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(bottomSheetContext);
+                },
+                child: const Text('Закрыть'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
+  /// данный метод показывает детали чека
   Future<void> _viewReceipt(Map<String, dynamic> payment) async {
+    if (!mounted) return;
+    
     final paymentId = payment['payment_id']?.toString() ?? ''; 
     final courseId = payment['course_id']?.toString() ?? '';
     final courseName = payment['course_name'] ?? 'Курс';
@@ -670,6 +764,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// данный метод создает элемент чека
   Widget _buildReceiptItem(String label, String value, {Color? color}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1052,6 +1147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// данный метод создает карточку статистики
   Widget _buildStatCard(
     BuildContext context,
     String label,

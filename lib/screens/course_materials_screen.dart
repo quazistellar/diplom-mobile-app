@@ -21,6 +21,7 @@ import 'test_screen.dart';
 import 'test_results_screen.dart';
 import 'dart:io';
 
+/// данный класс отображает экран материалов курса
 class CourseMaterialsScreen extends StatefulWidget {
   final int courseId;
   
@@ -54,6 +55,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     super.dispose();
   }
 
+  /// данный метод загружает материалы курса
   Future<void> _loadCourseMaterials() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
@@ -92,6 +94,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     }
   }
 
+  /// данный метод рассчитывает прогресс по курсу
   void _calculateProgress() {
     int completedAssignments = 0;
     int totalAssignments = 0;
@@ -126,6 +129,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     if (mounted) setState(() {});
   }
 
+  /// данный метод скачивает и открывает файл лекции
   Future<void> _downloadAndOpenLectureFile(String? filePath, String lectureName) async {
     if (filePath == null || filePath.isEmpty) {
       SnackBarHelper.showWarning(context, 'Файл не найден');
@@ -177,6 +181,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     }
   }
 
+  /// данный метод открывает лекцию онлайн
   Future<void> _openLectureOnline(String? filePath, String lectureName) async {
     if (filePath == null || filePath.isEmpty) {
       SnackBarHelper.showWarning(context, 'Файл не найден');
@@ -196,6 +201,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     }
   }
 
+  /// данный метод показывает диалог с URL лекции
   void _showUrlDialog(String url) {
     showDialog(
       context: context,
@@ -251,6 +257,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод открывает ссылку в браузере Windows
   Future<void> _openInBrowserWindows(String url) async {
     try {
       await Process.run('start', [url], runInShell: true);
@@ -260,6 +267,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     }
   }
 
+  /// данный метод извлекает имя файла из пути
   String _extractFileName(String filePath, String lectureName) {
     try {
       final uri = Uri.parse(filePath);
@@ -286,6 +294,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     return 'lecture_${DateTime.now().millisecondsSinceEpoch}${filePath.contains('.') ? filePath.substring(filePath.lastIndexOf('.')) : '.pdf'}';
   }
 
+  /// данный метод отправляет файл через share
   Future<void> _shareFile(String filePath, String fileName, String lectureName) async {
     try {
       await FileHelper.shareFile(
@@ -333,6 +342,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод создает заголовок AppBar
   Widget _buildAppBarTitle(ThemeData theme) {
     if (_course != null) {
       return Text(
@@ -355,6 +365,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод создает тело экрана
   Widget _buildBody(ThemeData theme) {
     if (_isLoading) {
       return Center(
@@ -414,6 +425,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод создает вкладку с лекциями
   Widget _buildLecturesTab(List<LectureWithMaterials> materialsByLecture, ThemeData theme) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -511,6 +523,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод создает вкладку с заданиями
   Widget _buildAssignmentsTab(List<LectureWithMaterials> materialsByLecture, ThemeData theme) {
     final allAssignments = materialsByLecture
         .expand((material) => material.assignments)
@@ -700,6 +713,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод создает вкладку с тестами
   Widget _buildTestsTab(List<LectureWithMaterials> materialsByLecture, ThemeData theme) {
     final allTests = materialsByLecture
         .expand((material) => material.tests)
@@ -900,6 +914,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод создает FAB с прогрессом
   Widget _buildProgressFAB(ThemeData theme) {
     return FloatingActionButton.extended(
       onPressed: () => _showProgressDialog(theme),
@@ -910,6 +925,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод создает чип с деталями
   Widget _buildDetailChip({
     required IconData icon,
     required String text,
@@ -937,6 +953,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод показывает диалог с прогрессом
   void _showProgressDialog(ThemeData theme) {
     showDialog(
       context: context,
@@ -1064,6 +1081,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод создает виджет статистики прогресса
   Widget _buildProgressStat({
     required IconData icon,
     required int count,
@@ -1086,6 +1104,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
+  /// данный метод создает элемент статистики
   Widget _buildProgressStatItem({
     required String label,
     required String count,
@@ -1106,109 +1125,127 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     );
   }
 
-void _showTestAttemptsDialog(Map<String, dynamic> attemptsData, Test test) {
-  final attempts = attemptsData['attempts'] as List? ?? [];
-  
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Row(
-        children: [
-          const Icon(Icons.history, color: Colors.blue),
-          const SizedBox(width: 8),
-          const Text('История попыток'),
-        ],
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+  /// данный метод показывает диалог с историей попыток теста
+  void _showTestAttemptsDialog(Map<String, dynamic> attemptsData, Test test) {
+    final attempts = attemptsData['attempts'] as List? ?? [];
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
           children: [
-            Text(
-              test.name,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            if (attempts.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(20),
-                child: Text(
-                  'Нет завершенных попыток',
-                  style: TextStyle(color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              )
-            else
-              ...attempts.map<Widget>((attempt) {
-                final isPassed = test.gradingForm == 'points'
-                    ? (attempt['percentage'] ?? 0) >= (test.passingScore ?? 50)
-                    : attempt['is_passed'] == true;
-                
-                final totalScore = attempt['total_score'] ?? 0;
-                final maxScore = attempt['max_score'] ?? 1; 
-                final correctAnswers = attempt['correct_answers'] ?? 0;
-                final totalQuestions = attempt['total_questions'] ?? 0;
-                
-                String scoreText;
-                if (test.gradingForm == 'points') {
-                  if (totalQuestions > 0) {
-                    final percentage = (correctAnswers / totalQuestions * 100).toStringAsFixed(1);
-                    scoreText = '$correctAnswers/$totalQuestions правильных ($percentage%)';
+            const Icon(Icons.history, color: Colors.blue),
+            const SizedBox(width: 8),
+            const Text('История попыток'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                test.name,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              if (attempts.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Text(
+                    'Нет завершенных попыток',
+                    style: TextStyle(color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else
+                ...attempts.map<Widget>((attempt) {
+                  final isPassed = test.gradingForm == 'points'
+                      ? (attempt['percentage'] ?? 0) >= (test.passingScore ?? 50)
+                      : attempt['is_passed'] == true;
+                  
+                  final totalScore = attempt['total_score'] ?? 0;
+                  final maxScore = attempt['max_score'] ?? 1; 
+                  final correctAnswers = attempt['correct_answers'] ?? 0;
+                  final totalQuestions = attempt['total_questions'] ?? 0;
+                  
+                  String scoreText;
+                  if (test.gradingForm == 'points') {
+                    if (totalQuestions > 0) {
+                      final percentage = (correctAnswers / totalQuestions * 100).toStringAsFixed(1);
+                      scoreText = '$correctAnswers/$totalQuestions правильных ($percentage%)';
+                    } else {
+                      scoreText = 'Нет данных';
+                    }
                   } else {
-                    scoreText = 'Нет данных';
+                    scoreText = attempt['is_passed'] == true ? 'Зачтено' : 'Не зачтено';
                   }
-                } else {
-                  scoreText = attempt['is_passed'] == true ? 'Зачтено' : 'Не зачтено';
-                }
-                
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    leading: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: isPassed ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Icon(
-                        isPassed ? Icons.check : Icons.close,
-                        color: isPassed ? Colors.green : Colors.red,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text('Попытка ${attempt['attempt_number'] ?? 1}'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          scoreText,
-                          style: const TextStyle(fontSize: 14),
+                  
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: isPassed ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(18),
                         ),
-                        if (test.gradingForm == 'points')
+                        child: Icon(
+                          isPassed ? Icons.check : Icons.close,
+                          color: isPassed ? Colors.green : Colors.red,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text('Попытка ${attempt['attempt_number'] ?? 1}'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            'Набрано баллов: $totalScore',
+                            scoreText,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          if (test.gradingForm == 'points')
+                            Text(
+                              'Набрано баллов: $totalScore',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          Text(
+                            'Время: ${attempt['time_spent'] ?? 0} сек',
                             style: const TextStyle(fontSize: 12, color: Colors.grey),
                           ),
-                        Text(
-                          'Время: ${attempt['time_spent'] ?? 0} сек',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isPassed ? 'Сдано' : 'Не сдано',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isPassed ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 4),
+                          Text(
+                            isPassed ? 'Сдано' : 'Не сдано',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isPassed ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    trailing: attempt['id'] != null
-                        ? IconButton(
-                            icon: const Icon(Icons.visibility, size: 20),
-                            onPressed: () {
+                        ],
+                      ),
+                      trailing: attempt['id'] != null
+                          ? IconButton(
+                              icon: const Icon(Icons.visibility, size: 20),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TestResultScreen(
+                                      testResultId: attempt['id'],
+                                      courseId: widget.courseId,
+                                      testId: test.id,
+                                    ),
+                                  ),
+                                );
+                              },
+                              tooltip: 'Просмотреть детали',
+                            )
+                          : null,
+                      onTap: attempt['id'] != null
+                          ? () {
                               Navigator.pop(context);
                               Navigator.push(
                                 context,
@@ -1220,38 +1257,21 @@ void _showTestAttemptsDialog(Map<String, dynamic> attemptsData, Test test) {
                                   ),
                                 ),
                               );
-                            },
-                            tooltip: 'Просмотреть детали',
-                          )
-                        : null,
-                    onTap: attempt['id'] != null
-                        ? () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TestResultScreen(
-                                  testResultId: attempt['id'],
-                                  courseId: widget.courseId,
-                                  testId: test.id,
-                                ),
-                              ),
-                            );
-                          }
-                        : null,
-                  ),
-                );
-              }).toList(),
-          ],
+                            }
+                          : null,
+                    ),
+                  );
+                }).toList(),
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Закрыть'),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Закрыть'),
-        ),
-      ],
-    ),
-  );
-}
+    );
+  }
 }

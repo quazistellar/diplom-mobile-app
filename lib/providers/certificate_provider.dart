@@ -15,10 +15,12 @@ class CertificateProvider with ChangeNotifier {
   List<dynamic> get certificates => _certificates;
   Map<String, dynamic>? get eligibilityData => _eligibilityData;
 
+  /// данная функция логирует сообщения
   void _log(String message) {
     if (kDebugMode) print('[CertificateProvider] $message');
   }
 
+  /// данная функция загружает список сертификатов пользователя
   Future<void> loadCertificates() async {
     _isLoading = true;
     _errorMessage = null;
@@ -43,6 +45,7 @@ class CertificateProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция проверяет возможность получения сертификата
   Future<Map<String, dynamic>> checkEligibility(int courseId) async {
     try {
       final isAuth = await _apiClient.isAuthenticated();
@@ -57,6 +60,7 @@ class CertificateProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция выпускает сертификат
   Future<Map<String, dynamic>> issueCertificate(int courseId) async {
     try {
       final isAuth = await _apiClient.isAuthenticated();
@@ -72,6 +76,7 @@ class CertificateProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция скачивает сертификат
   Future<String> downloadCertificate(int certificateId) async {
     try {
       final isAuth = await _apiClient.isAuthenticated();
@@ -88,6 +93,7 @@ class CertificateProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция открывает файл сертификата
   Future<void> openCertificate(String filePath) async {
     final result = await OpenFilex.open(filePath);
     if (result.type != ResultType.done) {
@@ -95,6 +101,7 @@ class CertificateProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция очищает данные сертификатов
   void clearData() {
     _certificates = [];
     _eligibilityData = null;

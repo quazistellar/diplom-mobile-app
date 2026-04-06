@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 
+/// данный класс отображает нижнюю панель навигации
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;

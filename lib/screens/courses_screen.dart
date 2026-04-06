@@ -11,6 +11,7 @@ import '../models/course.dart';
 import '../utils/snackbar_helper.dart';
 import 'base_navigation_screen.dart';
 
+/// данный класс отображает экран со списком всех курсов
 class CoursesScreen extends BaseNavigationScreen {
   const CoursesScreen({super.key});
 
@@ -23,6 +24,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
   final _searchController = TextEditingController();
   bool _isLoading = false;
   Timer? _searchDebounce;
+  
   @override
   void initState() {
     super.initState();
@@ -32,6 +34,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
       _syncSearchWithProvider();
     });
   }
+  
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -41,12 +44,15 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
       }
     });
   }
+  
   @override
   void dispose() {
     _searchController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
   }
+  
+  /// данный метод синхронизирует поле поиска с провайдером
   void _syncSearchWithProvider() {
     if (!mounted) return;
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
@@ -58,6 +64,8 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
       );
     }
   }
+  
+  /// данный метод загружает начальные данные
   Future<void> _loadInitialData() async {
     if (_isLoading || !mounted) return;
     
@@ -83,6 +91,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод загружает курсы
   Future<void> _loadCourses() async {
     if (_isLoading || !mounted) return;
     
@@ -98,6 +107,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод обрабатывает изменение поискового запроса
   void _onSearchChanged(String value) {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 500), () async {
@@ -120,6 +130,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     });
   }
 
+  /// данный метод очищает поиск
   void _clearSearch() {
     _searchController.clear();
     _searchDebounce?.cancel();
@@ -144,6 +155,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     });
   }
 
+  /// данный метод сбрасывает все фильтры
   void _resetFilters() async {
     if (!mounted) return;
     
@@ -156,6 +168,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод очищает фильтр по категориям
   Future<void> _clearCategories() async {
     try {
       final courseProvider = Provider.of<CourseProvider>(context, listen: false);
@@ -165,6 +178,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод очищает фильтр по типам
   Future<void> _clearTypes() async {
     try {
       final courseProvider = Provider.of<CourseProvider>(context, listen: false);
@@ -174,6 +188,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод очищает фильтр по сертификатам
   Future<void> _clearCertificate() async {
     try {
       final courseProvider = Provider.of<CourseProvider>(context, listen: false);
@@ -183,6 +198,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод очищает фильтр по бесплатным курсам
   Future<void> _clearFreeOnly() async {
     try {
       final courseProvider = Provider.of<CourseProvider>(context, listen: false);
@@ -192,6 +208,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод очищает сортировку
   Future<void> _clearSorting() async {
     try {
       final courseProvider = Provider.of<CourseProvider>(context, listen: false);
@@ -201,6 +218,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод возвращает названия выбранных категорий
   String _getCategoryNames(CourseProvider courseProvider, List<int> categoryIds) {
     if (categoryIds.isEmpty) return '';
     
@@ -220,6 +238,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод возвращает названия выбранных типов
   String _getTypeNames(CourseProvider courseProvider, List<int> typeIds) {
     if (typeIds.isEmpty) return '';
     
@@ -239,6 +258,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     }
   }
 
+  /// данный метод возвращает иконку для типа курса
   IconData _getTypeIcon(String typeName) {
     final lowerName = typeName.toLowerCase();
     if (lowerName.contains('образовательная программа') || lowerName.contains('online')) {
@@ -251,6 +271,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     return Icons.school;
   }
 
+  /// данный метод создает диалог с фильтрами
   Widget _buildFiltersDialog(BuildContext context, CourseProvider courseProvider) {
     final theme = Theme.of(context);
     final categories = courseProvider.courseCategories;
@@ -652,6 +673,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     );
   }
 
+  /// данный метод подсчитывает количество активных фильтров
   int _countActiveFilters(CourseProvider courseProvider) {
     int count = 0;
     if (courseProvider.selectedCategoryIds.isNotEmpty) count++;
@@ -958,6 +980,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     );
   }
 
+  /// данный метод создает чип фильтра
   Widget _buildFilterChip({
     required IconData icon,
     required String label,
@@ -1004,6 +1027,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
     );
   }
 
+  /// данный метод создает мульти-чип фильтра
   Widget _buildMultiFilterChip({
     required IconData icon,
     required String label,
@@ -1056,6 +1080,7 @@ class _CoursesScreenState extends BaseNavigationScreenState<CoursesScreen> {
 }
 
 extension on Course {
+  /// данный метод создает копию курса с обновленными полями
   Course copyWith({bool? isEnrolled}) {
     return Course(
       id: id,

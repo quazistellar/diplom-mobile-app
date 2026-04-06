@@ -1,5 +1,6 @@
 // models/review.dart
 
+/// данный класс представляет модель отзыва на курс
 class Review {
   final int id;
   final int courseId;
@@ -21,6 +22,7 @@ class Review {
     required this.isApproved,
   });
 
+  /// данная функция создает объект отзыва из JSON
   factory Review.fromJson(Map<String, dynamic> json) {
     return Review(
       id: json['id'] ?? 0,
@@ -34,6 +36,7 @@ class Review {
     );
   }
 
+  /// данная функция возвращает отформатированную дату публикации
   String get formattedDate {
     final now = DateTime.now();
     final difference = now.difference(publishDate);
@@ -53,30 +56,35 @@ class Review {
     }
   }
 
+  /// данная функция возвращает правильное склонение слова "год"
   String _getYearString(int count) {
     if (count % 10 == 1 && count % 100 != 11) return 'год';
     if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'года';
     return 'лет';
   }
 
+  /// данная функция возвращает правильное склонение слова "месяц"
   String _getMonthString(int count) {
     if (count % 10 == 1 && count % 100 != 11) return 'месяц';
     if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'месяца';
     return 'месяцев';
   }
 
+  /// данная функция возвращает правильное склонение слова "день"
   String _getDayString(int count) {
     if (count % 10 == 1 && count % 100 != 11) return 'день';
     if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'дня';
     return 'дней';
   }
 
+  /// данная функция возвращает правильное склонение слова "час"
   String _getHourString(int count) {
     if (count % 10 == 1 && count % 100 != 11) return 'час';
     if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'часа';
     return 'часов';
   }
 
+  /// данная функция возвращает правильное склонение слова "минута"
   String _getMinuteString(int count) {
     if (count % 10 == 1 && count % 100 != 11) return 'минуту';
     if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'минуты';

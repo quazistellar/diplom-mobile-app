@@ -25,10 +25,12 @@ class ProgressProvider with ChangeNotifier {
   StatisticsSummary? get courseStats => _courseStats;
   List<CertificateWithCourse> get certificates => _certificates;
   
+  /// данная функция логирует сообщения
   void _log(String message) {
     if (kDebugMode) print('[ProgressProvider] $message');
   }
   
+  /// данная функция загружает курсы с прогрессом пользователя
   Future<void> loadEnrolledCourses() async {
     _setLoading(true);
     _clearError();
@@ -57,7 +59,7 @@ class ProgressProvider with ChangeNotifier {
     }
   }
   
-
+  /// данная функция загружает материалы курса
   Future<void> loadCourseMaterials(int courseId) async {
     _setLoading(true);
     _clearError();
@@ -89,6 +91,7 @@ class ProgressProvider with ChangeNotifier {
     }
   }
   
+  /// данная функция загружает детали лекции
   Future<Map<String, dynamic>> loadLectureDetails(int courseId, int lectureId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
@@ -106,6 +109,7 @@ class ProgressProvider with ChangeNotifier {
     }
   }
   
+  /// данная функция загружает детали задания
   Future<AssignmentDetail> loadAssignmentDetails(int courseId, int assignmentId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
@@ -125,6 +129,7 @@ class ProgressProvider with ChangeNotifier {
     }
   }
   
+  /// данная функция отправляет задание на проверку
   Future<Map<String, dynamic>> submitAssignment(
     int courseId, 
     int assignmentId, 
@@ -165,6 +170,7 @@ class ProgressProvider with ChangeNotifier {
     }
   }
   
+  /// данная функция обновляет попытку выполнения задания
   Future<Map<String, dynamic>> updateAssignmentAttempt(
     int courseId, 
     int assignmentId,
@@ -206,6 +212,7 @@ class ProgressProvider with ChangeNotifier {
     }
   }
   
+  /// данная функция загружает попытки выполнения задания
   Future<Map<String, dynamic>> getAssignmentAttempts(int courseId, int assignmentId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
@@ -221,6 +228,7 @@ class ProgressProvider with ChangeNotifier {
     }
   }
   
+  /// данная функция загружает тест
   Future<Map<String, dynamic>> getTest(int courseId, int testId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
@@ -238,6 +246,7 @@ class ProgressProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция отправляет ответы на тест
   Future<Map<String, dynamic>> submitTest(
     int courseId, 
     int testId, 
@@ -270,37 +279,37 @@ class ProgressProvider with ChangeNotifier {
     }
   }
 
-
-Future<Map<String, dynamic>> getTestResultDetails(int testResultId) async {
-  try {
-    final token = await _apiClient.getToken();
-    if (token == null) {
-      throw Exception('Требуется авторизация');
+  /// данная функция загружает детали результата теста
+  Future<Map<String, dynamic>> getTestResultDetails(int testResultId) async {
+    try {
+      final token = await _apiClient.getToken();
+      if (token == null) {
+        throw Exception('Требуется авторизация');
+      }
+      
+      _log('Загружаем детали результата теста $testResultId...');
+      
+      final dio = Dio();
+      final response = await dio.get(
+        '${ApiClient.apiUrl}/listener/test-results/$testResultId/',
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+      
+      _log('Детали результата загружены');
+      return response.data;
+      
+    } on DioException catch (e) {
+      _log('Ошибка загрузки деталей результата: ${e}');
+      throw Exception('Ошибка загрузки деталей результата: ${e}');
     }
-    
-    _log('Загружаем детали результата теста $testResultId...');
-    
-    final dio = Dio();
-    final response = await dio.get(
-      '${ApiClient.apiUrl}/listener/test-results/$testResultId/',
-      options: Options(
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-    
-    _log('Детали результата загружены');
-    return response.data;
-    
-  } on DioException catch (e) {
-    _log('Ошибка загрузки деталей результата: ${e}');
-    throw Exception('Ошибка загрузки деталей результата: ${e}');
   }
-}
   
-
+  /// данная функция загружает попытки прохождения теста
   Future<Map<String, dynamic>> getTestAttempts(int courseId, int testId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
@@ -319,6 +328,7 @@ Future<Map<String, dynamic>> getTestResultDetails(int testResultId) async {
     }
   }
   
+  /// данная функция загружает результаты и сертификаты
   Future<void> loadResults() async {
     _setLoading(true);
     _clearError();
@@ -348,11 +358,13 @@ Future<Map<String, dynamic>> getTestResultDetails(int testResultId) async {
     }
   }
   
+  /// данная функция очищает сообщение об ошибке
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
   
+  /// данная функция очищает данные прогресса
   void clearData() {
     _enrolledCourses = [];
     _courseMaterials = [];
@@ -361,14 +373,14 @@ Future<Map<String, dynamic>> getTestResultDetails(int testResultId) async {
     notifyListeners();
   }
 
+  /// данная функция устанавливает состояние загрузки
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
+  /// данная функция очищает ошибку
   void _clearError() {
     _errorMessage = null;
   }
-
-  
 }

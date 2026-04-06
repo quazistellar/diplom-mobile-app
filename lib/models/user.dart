@@ -1,3 +1,4 @@
+/// данный класс представляет модель пользователя
 class User {
   final int id;
   final String? email;
@@ -17,6 +18,7 @@ class User {
     required this.rawData,
   });
 
+  /// данная функция создает объект пользователя из JSON
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] ?? 0,
@@ -29,6 +31,7 @@ class User {
     );
   }
 
+  /// данная функция возвращает полное имя пользователя
   String get fullName {
     if (firstName != null && lastName != null) {
       return '$firstName $lastName';
@@ -36,6 +39,7 @@ class User {
     return username ?? 'Пользователь';
   }
 
+  /// данная функция возвращает инициалы пользователя
   String get initials {
     if (firstName != null && firstName!.isNotEmpty) {
       return firstName![0].toUpperCase();

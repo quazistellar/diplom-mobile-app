@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/course.dart';
 import '../services/api_client.dart';
 
+/// данный класс отображает карточку курса в списке
 class CourseCard extends StatelessWidget {
   final Course course;
   final VoidCallback onTap;
@@ -13,6 +14,7 @@ class CourseCard extends StatelessWidget {
     required this.onTap,
   }) : super(key: key);
 
+  /// данная функция возвращает полный URL изображения курса
   String? _getFullImageUrl() {
     if (course.photoPath == null || course.photoPath!.isEmpty) {
       return null;
@@ -208,6 +210,7 @@ class CourseCard extends StatelessWidget {
     );
   }
 
+  /// данная функция создает заглушку для отсутствующего изображения
   Widget _buildImagePlaceholder(ThemeData theme) {
     return Container(
       width: double.infinity,
@@ -241,6 +244,7 @@ class CourseCard extends StatelessWidget {
     );
   }
 
+  /// данная функция создает чип с категорией или типом
   Widget _buildChip({required String label, required Color color}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -259,6 +263,7 @@ class CourseCard extends StatelessWidget {
     );
   }
 
+  /// данная функция создает информационный чип
   Widget _buildInfoChip({
     required IconData icon,
     required String label,

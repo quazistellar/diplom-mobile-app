@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-
+/// данный класс отображает элемент настройки в списке
 class SettingItem extends StatelessWidget {
   final IconData icon;
   final String title;

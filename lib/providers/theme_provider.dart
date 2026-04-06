@@ -11,10 +11,16 @@ class ThemeManager with ChangeNotifier {
   bool _rememberMe = false;
   String _fontSize = 'Стандартный';
 
+  /// данная функция возвращает текущий режим темы
   ThemeMode get themeMode => _themeMode;
+  
+  /// данная функция возвращает состояние запоминания пользователя
   bool get rememberMe => _rememberMe;
+  
+  /// данная функция возвращает текущий размер шрифта
   String get fontSize => _fontSize;
   
+  /// данная функция возвращает текущую тему с учетом размера шрифта
   ThemeData get currentTheme {
     final baseTheme = _themeMode == ThemeMode.dark 
         ? AppTheme.darkTheme 
@@ -23,10 +29,12 @@ class ThemeManager with ChangeNotifier {
     return _applyFontSize(baseTheme);
   }
   
+  /// данная функция инициализирует менеджер темы и загружает настройки
   ThemeManager() {
     _loadPreferences();
   }
 
+  /// данная функция загружает сохраненные настройки темы
   Future<void> _loadPreferences() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -44,6 +52,7 @@ class ThemeManager with ChangeNotifier {
     }
   }
 
+  /// данная функция устанавливает режим темы
   Future<void> setTheme(ThemeMode theme) async {
     _themeMode = theme;
     notifyListeners();
@@ -56,6 +65,7 @@ class ThemeManager with ChangeNotifier {
     }
   }
 
+  /// данная функция устанавливает состояние запоминания пользователя
   Future<void> setRememberMe(bool value) async {
     _rememberMe = value;
     notifyListeners();
@@ -68,6 +78,7 @@ class ThemeManager with ChangeNotifier {
     }
   }
 
+  /// данная функция устанавливает размер шрифта
   Future<void> setFontSize(String fontSize) async {
     _fontSize = fontSize;
     notifyListeners();
@@ -80,11 +91,13 @@ class ThemeManager with ChangeNotifier {
     }
   }
 
+  /// данная функция переключает тему между светлой и темной
   void toggleTheme() {
     final newTheme = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     setTheme(newTheme);
   }
 
+  /// данная функция возвращает коэффициент масштабирования шрифта
   double _getFontScaleFactor() {
     switch (_fontSize) {
       case 'Мелкий':
@@ -97,6 +110,7 @@ class ThemeManager with ChangeNotifier {
     }
   }
 
+  /// данная функция применяет размер шрифта к базовой теме
   ThemeData _applyFontSize(ThemeData baseTheme) {
     final scale = _getFontScaleFactor();
     

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
+import 'package:unireax_mobile_diplom/services/api_client.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'screens/auth_screen.dart';
 import 'screens/main_screen.dart';
@@ -24,16 +25,21 @@ import 'providers/course_provider.dart';
 import 'providers/user_course_provider.dart';
 import 'providers/statistics_provider.dart';
 
-void main() {
+/// данная функция является точкой входа в приложение
+void main() async {  
   WidgetsFlutterBinding.ensureInitialized();
 
   if (Platform.isAndroid) {
     AndroidWebViewController.enableDebugging(true);
   }
   
+  // проверка доступного URL для устройства
+  await ApiClient.checkDeviceUrl();  
+  
   runApp(const MyApp());
 }
 
+/// данный класс представляет корневое приложение
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

@@ -26,6 +26,7 @@ dependencies:
   webview_flutter_android: ^3.12.1
   webview_flutter_wkwebview: ^3.9.1
   uuid: ^4.3.3
+  android_intent_plus: ^5.0.0
 
 dev_dependencies:
   flutter_test:

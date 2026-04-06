@@ -1,10 +1,10 @@
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../services/api_client.dart';
 import '../utils/snackbar_helper.dart';
 
+/// данный класс отображает секцию отзывов для курса
 class ReviewSection extends StatefulWidget {
   final int courseId;
   final bool isAuthenticated;
@@ -51,10 +51,12 @@ class _ReviewSectionState extends State<ReviewSection> {
     super.dispose();
   }
 
+  /// данный метод загружает ID текущего пользователя
   Future<void> _loadCurrentUser() async {
     _currentUserId = await _apiClient.getUserId();
   }
 
+  /// данный метод загружает отзывы о курсе
   Future<void> _loadReviews() async {
     if (_loadingReviews) return;
     
@@ -102,6 +104,7 @@ class _ReviewSectionState extends State<ReviewSection> {
     }
   }
 
+  /// данный метод декодирует текст отзыва
   String _decodeText(String text) {
     try {
       if (text.startsWith('Р') || text.contains('Р')) {
@@ -118,6 +121,7 @@ class _ReviewSectionState extends State<ReviewSection> {
     }
   }
 
+  /// данный метод отправляет отзыв
   Future<void> _submitReview() async {
     if (_selectedRating == 0) {
       SnackBarHelper.showWarning(context, 'Пожалуйста, выберите рейтинг');
@@ -204,6 +208,7 @@ class _ReviewSectionState extends State<ReviewSection> {
     }
   }
 
+  /// данный метод удаляет отзыв
   Future<void> _deleteReview() async {
     if (_userReview == null) return;
 
@@ -264,6 +269,7 @@ class _ReviewSectionState extends State<ReviewSection> {
     }
   }
 
+  /// данный метод начинает редактирование отзыва
   void _startEditing() {
     if (_userReview != null) {
       setState(() {
@@ -275,6 +281,7 @@ class _ReviewSectionState extends State<ReviewSection> {
     }
   }
 
+  /// данный метод создает виджет звезд рейтинга
   Widget _buildRatingStars(int rating, {double size = 20, bool interactive = false}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -293,6 +300,7 @@ class _ReviewSectionState extends State<ReviewSection> {
     );
   }
 
+  /// данный метод создает виджет карточки отзыва
   Widget _buildReviewCard(Map<String, dynamic> review, ThemeData theme) {
     final username = review['user_details']?['username'] ?? 
                     review['user']?['username'] ?? 'Аноним';
@@ -399,6 +407,7 @@ class _ReviewSectionState extends State<ReviewSection> {
     );
   }
 
+  /// данный метод создает форму добавления отзыва
   Widget _buildAddReviewForm(ThemeData theme) {
     final canReview = widget.userProgress >= 50;
     final isEditing = _editingReview;

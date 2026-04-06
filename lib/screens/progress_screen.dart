@@ -9,6 +9,7 @@ import '../utils/snackbar_helper.dart';
 import 'course_materials_screen.dart';
 import 'base_navigation_screen.dart';
 
+/// данный класс отображает экран прогресса пользователя
 class ProgressScreen extends BaseNavigationScreen {
   const ProgressScreen({Key? key}) : super(key: key);
 
@@ -25,6 +26,7 @@ class _ProgressScreenState extends BaseNavigationScreenState<ProgressScreen> {
     });
   }
 
+  /// данный метод загружает данные о прогрессе
   Future<void> _loadData() async {
     final progressProvider = Provider.of<ProgressProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -40,6 +42,7 @@ class _ProgressScreenState extends BaseNavigationScreenState<ProgressScreen> {
     }
   }
 
+  /// данный метод показывает диалог подтверждения выхода из курса
   Future<void> _showLeaveCourseDialog(BuildContext context, CourseProgress course) async {
     final theme = Theme.of(context);
     final userCourseProvider = Provider.of<UserCourseProvider>(context, listen: false);
@@ -63,7 +66,7 @@ class _ProgressScreenState extends BaseNavigationScreenState<ProgressScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Весь ваш прогресс будет сохранен, но вы больше не сможете получать уведомления.',
+              'Весь ваш прогресс будет сохранен, но вы больше не сможете получать новые материалы!',
               style: TextStyle(
                 fontSize: 12,
                 color: theme.hintColor,
@@ -151,6 +154,7 @@ class _ProgressScreenState extends BaseNavigationScreenState<ProgressScreen> {
     );
   }
 
+  /// данный метод создает тело экрана прогресса
   Widget _buildBody(ThemeData theme, ProgressProvider progressProvider, AuthProvider authProvider) {
     if (!authProvider.isAuthenticated) {
       return Center(
@@ -241,6 +245,7 @@ class _ProgressScreenState extends BaseNavigationScreenState<ProgressScreen> {
     );
   }
 
+  /// данный метод создает карточку курса с прогрессом
   Widget _buildCourseCard(CourseProgress course, ThemeData theme) {
     final progress = course.progress;
     final isCompleted = course.isCompleted;
@@ -396,6 +401,7 @@ class _ProgressScreenState extends BaseNavigationScreenState<ProgressScreen> {
     );
   }
 
+  /// данный метод создает круговой индикатор прогресса
   Widget _buildProgressCircle(double progress, ThemeData theme) {
     return Stack(
       alignment: Alignment.center,
@@ -422,6 +428,7 @@ class _ProgressScreenState extends BaseNavigationScreenState<ProgressScreen> {
     );
   }
 
+  /// данный метод создает чип с деталями курса
   Widget _buildDetailChip({
     required IconData icon,
     required String text,

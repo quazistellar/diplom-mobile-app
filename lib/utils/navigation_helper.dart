@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/navigation_provider.dart';
 
+/// данный класс предоставляет вспомогательные методы для навигации
 mixin NavigationHelper<T extends StatefulWidget> on State<T> {
   @override
   void initState() {
     super.initState();
   }
 
+  /// данная функция обрабатывает нажатие на элемент навигации
   void handleNavigationTap(int index, BuildContext context) {
     final navProvider = Provider.of<NavigationProvider>(context, listen: false);
     

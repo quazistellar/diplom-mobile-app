@@ -37,6 +37,7 @@ class CourseProvider with ChangeNotifier {
   String? get currentSortBy => _currentSortBy;
   String get currentSortOrder => _currentSortOrder;
 
+  /// данная функция загружает список категорий курсов
   Future<void> loadCourseCategories() async {
     try {
       final data = await _apiClient.get<Map<String, dynamic>>(
@@ -54,6 +55,7 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция загружает список типов курсов
   Future<void> loadCourseTypes() async {
     try {
       final data = await _apiClient.get<Map<String, dynamic>>(
@@ -71,6 +73,7 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция загружает список курсов с фильтрацией
   Future<void> fetchCourses({
     String? searchQuery,
     List<int>? categoryIds,
@@ -141,6 +144,7 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция загружает курсы пользователя
   Future<void> loadUserCourses() async {
     if (!await _apiClient.isAuthenticated()) return;
 
@@ -157,6 +161,7 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция обновляет фильтры курсов
   Future<void> updateFilters({
     String? searchQuery,
     List<int>? categoryIds,
@@ -178,6 +183,7 @@ class CourseProvider with ChangeNotifier {
     await fetchCourses();
   }
 
+  /// данная функция обновляет значения фильтров
   void _updateFilters({
     String? searchQuery,
     List<int>? categoryIds,
@@ -210,6 +216,7 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция сбрасывает все фильтры
   void _resetAllFilters() {
     _currentSearchQuery = null;
     _selectedCategoryIds = [];
@@ -220,37 +227,44 @@ class CourseProvider with ChangeNotifier {
     _currentSortOrder = 'asc';
   }
 
+  /// данная функция очищает все фильтры
   Future<void> clearAllFilters() async {
     _resetAllFilters();
     await fetchCourses();
   }
 
+  /// данная функция очищает фильтр по категориям
   Future<void> clearCategoryFilter() async {
     _selectedCategoryIds = [];
     await fetchCourses();
   }
 
+  /// данная функция очищает фильтр по типам
   Future<void> clearTypeFilter() async {
     _selectedTypeIds = [];
     await fetchCourses();
   }
 
+  /// данная функция очищает фильтр по сертификатам
   Future<void> clearCertificateFilter() async {
     _currentHasCertificate = null;
     await fetchCourses();
   }
 
+  /// данная функция очищает фильтр по бесплатным курсам
   Future<void> clearFreeOnlyFilter() async {
     _currentFreeOnly = null;
     await fetchCourses();
   }
 
+  /// данная функция очищает сортировку
   Future<void> clearSorting() async {
     _currentSortBy = null;
     _currentSortOrder = 'asc';
     await fetchCourses();
   }
 
+  /// данная функция переключает фильтр по категории
   void toggleCategoryFilter(int categoryId) {
     if (_selectedCategoryIds.contains(categoryId)) {
       _selectedCategoryIds.remove(categoryId);
@@ -259,6 +273,7 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция переключает фильтр по типу
   void toggleTypeFilter(int typeId) {
     if (_selectedTypeIds.contains(typeId)) {
       _selectedTypeIds.remove(typeId);
@@ -267,28 +282,34 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция проверяет записан ли пользователь на курс
   bool isUserEnrolled(int courseId) {
     return _userCourses.any((course) => course.id == courseId);
   }
 
+  /// данная функция возвращает количество активных курсов
   int getActiveCoursesCount() {
     return _userCourses.where((course) => course.isCompleted != true).length;
   }
 
+  /// данная функция возвращает количество завершенных курсов
   int getCompletedCoursesCount() {
     return _userCourses.where((course) => course.isCompleted == true).length;
   }
 
+  /// данная функция очищает сообщение об ошибке
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
+  /// данная функция устанавливает состояние загрузки
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
+  /// данная функция очищает ошибку
   void _clearError() {
     _errorMessage = null;
   }
@@ -306,6 +327,7 @@ class CourseProvider with ChangeNotifier {
   int get totalAssignments => _totalAssignments;
   int get totalTests => _totalTests;
 
+  /// данная функция загружает материалы курса
   Future<void> loadCourseMaterials(int courseId) async {
     _setLoading(true);
     _clearError();

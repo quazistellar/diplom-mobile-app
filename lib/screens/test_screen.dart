@@ -6,6 +6,7 @@ import '../models/test.dart';
 import '../utils/snackbar_helper.dart';
 import 'test_results_screen.dart';
 
+/// данный класс отображает экран прохождения теста
 class TestScreen extends StatefulWidget {
   final int courseId;
   final int testId;
@@ -45,6 +46,7 @@ class _TestScreenState extends State<TestScreen> {
     super.dispose();
   }
 
+  /// данный метод загружает данные теста
   Future<void> _loadTest() async {
     print('Загрузка теста...');
     
@@ -115,6 +117,7 @@ class _TestScreenState extends State<TestScreen> {
     }
   }
 
+  /// данный метод нормализует тип ответа
   String _normalizeAnswerType(String answerType) {
     if (answerType.isEmpty) return 'текст';
     
@@ -136,6 +139,7 @@ class _TestScreenState extends State<TestScreen> {
     return 'текст';
   }
 
+  /// данный метод запускает таймер
   void _startTimer() {
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted && !_testSubmitted) {
@@ -145,6 +149,7 @@ class _TestScreenState extends State<TestScreen> {
     });
   }
 
+  /// данный метод отправляет тест на проверку
   Future<void> _submitTest() async {
     if (_isSubmitting || _testSubmitted) return;
     
@@ -198,22 +203,26 @@ class _TestScreenState extends State<TestScreen> {
     }
   }
 
+  /// данный метод возвращает на предыдущий экран
   void _goBack() {
     Navigator.pop(context);
   }
 
+  /// данный метод переходит к следующему вопросу
   void _nextQuestion() {
     if (_currentQuestion < ((_testData?['questions'] ?? []).length - 1)) {
       setState(() => _currentQuestion++);
     }
   }
 
+  /// данный метод возвращается к предыдущему вопросу
   void _previousQuestion() {
     if (_currentQuestion > 0) {
       setState(() => _currentQuestion--);
     }
   }
 
+  /// данный метод форматирует дату
   String _formatDate(dynamic date) {
     if (date == null) return 'Не указана';
     
@@ -284,6 +293,7 @@ class _TestScreenState extends State<TestScreen> {
     );
   }
 
+  /// данный метод создает экран прохождения теста
   Widget _buildTestScreen(ThemeData theme) {
     if (_isLoading) {
       return Center(
@@ -466,6 +476,7 @@ class _TestScreenState extends State<TestScreen> {
     );
   }
 
+  /// данный метод создает виджет ответа на вопрос
   Widget _buildAnswerWidget(
     Map<String, dynamic> question, 
     Map<String, dynamic> currentAnswer,
@@ -496,6 +507,7 @@ class _TestScreenState extends State<TestScreen> {
     }
   }
 
+  /// данный метод создает виджет сопоставления с выпадающими списками
   Widget _buildMatchingWithDropdown(
     List<dynamic> pairs,
     Map<String, dynamic> currentAnswer,
@@ -647,6 +659,7 @@ class _TestScreenState extends State<TestScreen> {
     );
   }
 
+  /// данный метод создает виджет выбора одного ответа
   Widget _buildSingleChoice(
     List<dynamic> options,
     Map<String, dynamic> currentAnswer,
@@ -684,6 +697,7 @@ class _TestScreenState extends State<TestScreen> {
     );
   }
 
+  /// данный метод создает виджет выбора нескольких ответов
   Widget _buildMultipleChoice(
     List<dynamic> options,
     Map<String, dynamic> currentAnswer,
@@ -729,6 +743,7 @@ class _TestScreenState extends State<TestScreen> {
     );
   }
 
+  /// данный метод создает виджет текстового ответа
   Widget _buildTextAnswer(
     Map<String, dynamic> currentAnswer,
     ThemeData theme,
@@ -756,6 +771,7 @@ class _TestScreenState extends State<TestScreen> {
     );
   }
 
+  /// данный метод создает экран с результатом теста
   Widget _buildResultScreen(ThemeData theme) {
     final test = _testData?['test'] ?? {};
     final score = _testResult?['total_score'] ?? 0;
@@ -1022,6 +1038,7 @@ class _TestScreenState extends State<TestScreen> {
     );
   }
 
+  /// данный метод показывает диалог с историей попыток
   void _showTestAttemptsDialog(Map<String, dynamic> attemptsData, Map<String, dynamic> test) {
     final attempts = attemptsData['attempts'] as List? ?? [];
     final gradingForm = test['grading_form'] ?? 'points';
@@ -1183,6 +1200,7 @@ class _TestScreenState extends State<TestScreen> {
     );
   }
 
+  /// данный метод создает нижнюю панель навигации
   Widget _buildBottomBar(ThemeData theme) {
     final questions = _testData?['questions'] ?? [];
     

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -7,9 +8,11 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import '../services/api_client.dart';
 
+/// данный класс предоставляет сервис для обработки платежей через ЮKassa
 class PaymentService {
   static final ApiClient _apiClient = ApiClient();
 
+  /// данная функция открывает окно оплаты (WebView или браузер в зависимости от платформы)
   static Future<void> openYookassaPayment({
     required BuildContext context,
     required String paymentUrl,
@@ -35,6 +38,7 @@ class PaymentService {
     }
   }
 
+  /// данная функция открывает платежную страницу в браузере (для Windows)
   static Future<void> _openInBrowser(
     BuildContext context,
     String paymentUrl,
@@ -44,8 +48,6 @@ class PaymentService {
   ) async {
     try {
       final uri = Uri.parse(paymentUrl);
-      
-      print('🔍 Opening browser for Windows...');
       
       if (await canLaunchUrl(uri)) {
         if (context.mounted) {
@@ -91,6 +93,7 @@ class PaymentService {
     }
   }
 
+  /// данная функция показывает диалог ожидания после оплаты в браузере
   static Future<void> _showWaitingDialog(
     BuildContext context,
     String paymentId,
@@ -168,6 +171,7 @@ class PaymentService {
     onComplete(false, 'Время ожидания истекло. Проверьте статус платежа на странице или в профиле.', paymentId);
   }
 
+  /// данная функция открывает платежную страницу в WebView (для мобильных платформ)
   static Future<void> _openWebViewPayment(
     BuildContext context,
     String paymentUrl,
@@ -277,6 +281,7 @@ class PaymentService {
     );
   }
 
+  /// данная функция проверяет статус платежа и подтверждает его
   static Future<void> _checkPaymentStatus(
     BuildContext context,
     String paymentId,
@@ -301,7 +306,8 @@ class PaymentService {
             }
           }
         } catch (e) {
-          print('🔍 Status check error: $e');
+          onComplete(false, 'Ошибка проверки статуса оплаты', paymentId);
+          log('Проверка статуса оплаты: $e');
         }
         
         await Future.delayed(const Duration(seconds: 1));
@@ -310,7 +316,7 @@ class PaymentService {
       onComplete(false, 'Платеж не подтвержден', paymentId);
       
     } catch (e) {
-      print('Error checking payment status: $e');
+      log('Ошибка проверки статуса платежа: $e');
       onComplete(false, 'Ошибка проверки статуса платежа', paymentId);
     }
   }

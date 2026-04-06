@@ -20,7 +20,7 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
             
-            <!-- Deep linking для unireax схемы -->
+            <!-- deep-linking для unireax-схемы -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

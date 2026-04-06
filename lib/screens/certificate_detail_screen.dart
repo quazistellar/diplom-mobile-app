@@ -8,6 +8,7 @@ import '../models/course.dart';
 import '../utils/snackbar_helper.dart';
 import '../utils/formatters.dart';
 
+/// данный класс отображает экран деталей сертификата
 class CertificateDetailScreen extends StatefulWidget {
   final Map<String, dynamic> certificate;
   final Map<String, dynamic> course;
@@ -34,6 +35,7 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
     _course = Course.fromJson(widget.course);
   }
 
+  /// данный метод скачивает сертификат
   Future<void> _downloadCertificate() async {
     setState(() => _isDownloading = true);
 
@@ -60,6 +62,7 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
     }
   }
 
+  /// данный метод открывает файл сертификата
   Future<void> _openCertificate(String filePath) async {
     try {
       final result = await OpenFilex.open(filePath);
@@ -72,6 +75,7 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
     }
   }
 
+  /// данный метод показывает диалог действий с файлом
   void _showFileActionDialog(String filePath) {
     showDialog(
       context: context,
@@ -369,6 +373,7 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
     );
   }
 
+  /// данный метод создает виджет строки с информацией
   Widget _buildInfoRow(
     BuildContext context,
     IconData icon,

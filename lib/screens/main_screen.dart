@@ -12,6 +12,7 @@ import '../screens/course_detail_screen.dart';
 import '../screens/base_navigation_screen.dart';
 import '../utils/formatters.dart';
 
+/// данный класс отображает главный экран приложения
 class MainScreen extends BaseNavigationScreen {
   const MainScreen({super.key});
 
@@ -41,6 +42,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     super.dispose();
   }
 
+  /// данный метод загружает начальные данные
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
 
@@ -68,6 +70,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     }
   }
 
+  /// данный метод обновляет данные
   Future<void> _refreshData() async {
     setState(() => _isLoading = true);
 
@@ -94,6 +97,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     }
   }
 
+  /// данный метод обрабатывает изменение поискового запроса
   void _onSearchChanged(String value) {
     _searchDebounce?.cancel();
     
@@ -104,6 +108,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     });
   }
 
+  /// данный метод показывает сообщение об успехе
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -114,6 +119,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод показывает сообщение об ошибке
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -214,6 +220,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод создает виджет аватара пользователя
   Widget _buildUserAvatar(User? user, ThemeData theme, AuthProvider authProvider) {
     return PopupMenuButton<String>(
       icon: CircleAvatar(
@@ -259,6 +266,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод создает виджет приветствия
   Widget _buildGreeting(User? user, ThemeData theme) {
     String greeting = _getGreetingText(user);
     
@@ -285,6 +293,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод возвращает текст приветствия
   String _getGreetingText(User? user) {
     if (user != null) {
       return 'Добро пожаловать, ${user.fullName}!';
@@ -292,6 +301,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     return 'Добро пожаловать!';
   }
 
+  /// данный метод создает виджет поиска
   Widget _buildSearch(ThemeData theme) {
     return Card(
       color: theme.cardTheme.color,
@@ -334,6 +344,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод создает виджет статистики
   Widget _buildStats(StatisticsProvider statsProvider, ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,6 +409,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод создает карточку статистики
   Widget _buildStatCard({
     required IconData icon,
     required String value,
@@ -445,6 +457,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод создает заголовок раздела с курсами
   Widget _buildCoursesHeader(int count, ThemeData theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -468,6 +481,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод создает список курсов
   Widget _buildCoursesList(List<Course> courses, CourseProvider courseProvider, ThemeData theme) {
     if (courses.isEmpty) {
       return _buildEmptyCoursesState(theme);
@@ -501,6 +515,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод создает виджет пустого состояния курсов
   Widget _buildEmptyCoursesState(ThemeData theme) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 40),
@@ -552,6 +567,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод создает кнопку просмотра всех курсов
   Widget _buildViewAllButton(ThemeData theme) {
     return Center(
       child: ElevatedButton(
@@ -577,6 +593,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     );
   }
 
+  /// данный метод показывает диалог подтверждения выхода
   void _showLogoutDialog(BuildContext context, AuthProvider authProvider, ThemeData theme) {
     showDialog(
       context: context,
@@ -624,6 +641,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
 }
 
 extension on Course {
+  /// данный метод создает копию курса с обновленными полями
   Course copyWith({bool? isEnrolled}) {
     return Course(
       id: id,

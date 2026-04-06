@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+/// данный класс предоставляет утилиты для форматирования данных
 class Formatters {
+  /// данная функция форматирует дату в формат ДД.ММ.ГГГГ
   static String formatDate(String? date) {
     if (date == null || date.isEmpty) return '—';
     try {
@@ -12,6 +14,7 @@ class Formatters {
     }
   }
 
+  /// данная функция форматирует дату и время в формат ДД.ММ.ГГГГ ЧЧ:ММ
   static String formatDateTime(String? date) {
     if (date == null || date.isEmpty) return '—';
     try {
@@ -22,6 +25,7 @@ class Formatters {
     }
   }
 
+  /// данная функция форматирует размер файла в удобно читаемый вид
   static String formatFileSize(dynamic size) {
     if (size == null) return '—';
     
@@ -42,6 +46,7 @@ class Formatters {
     return '${(bytes / 1048576).toStringAsFixed(1)} МБ';
   }
 
+  /// данная функция форматирует большие числа с суффиксами (k, M)
   static String formatNumber(int number) {
     if (number >= 1000000) {
       return '${(number / 1000000).toStringAsFixed(1)}M';
@@ -51,6 +56,7 @@ class Formatters {
     return number.toString();
   }
 
+  /// данная функция возвращает строковый идентификатор типа файла
   static String getFileIcon(String fileName) {
     final ext = fileName.toLowerCase().split('.').last;
     switch (ext) {
@@ -82,6 +88,7 @@ class Formatters {
     }
   }
 
+  /// данная функция возвращает иконку для типа файла
   static IconData getFileIconData(String fileName) {
     final ext = fileName.toLowerCase().split('.').last;
     switch (ext) {
@@ -113,6 +120,7 @@ class Formatters {
     }
   }
 
+  /// данная функция возвращает название типа оценивания
   static String getGradingTypeName(String? type) {
     switch (type) {
       case 'points':
@@ -124,6 +132,7 @@ class Formatters {
     }
   }
 
+  /// данная функция возвращает правильное склонение слова "курс"
   static String getCourseWord(int count) {
     if (count % 10 == 1 && count % 100 != 11) return 'курс';
     if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) {

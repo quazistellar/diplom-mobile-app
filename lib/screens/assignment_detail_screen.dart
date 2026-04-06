@@ -13,6 +13,7 @@ import '../models/assignment_attempt.dart';
 import '../utils/formatters.dart';
 import '../utils/snackbar_helper.dart';
 
+/// класс отображает экран подробной информации практической работы
 class AssignmentDetailScreen extends StatefulWidget {
   final int courseId;
   final int assignmentId;
@@ -59,6 +60,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     super.dispose();
   }
 
+  /// данная функция загружает детали задания и попытки
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
@@ -80,6 +82,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     }
   }
 
+  /// данная функция загружает детали задания
   Future<void> _loadAssignmentDetails() async {
     try {
       final data = await _apiClient.get<Map<String, dynamic>>(
@@ -92,6 +95,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     }
   }
 
+  /// данная функция загружает попытки выполнения задания
   Future<void> _loadAttempts() async {
     setState(() => _isLoadingAttempts = true);
     
@@ -110,6 +114,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     }
   }
 
+  /// данная функция выбирает файлы для загрузки
   Future<void> _pickFiles() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -140,6 +145,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     }
   }
 
+  /// данная функция отправляет задание на проверку
   Future<void> _submitAssignment() async {
     if (_selectedFiles.isEmpty) {
       SnackBarHelper.showWarning(context, 'Добавьте хотя бы один файл');
@@ -180,6 +186,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     }
   }
 
+  /// данная функция обновляет существующую попытку
   Future<void> _updateAttempt(int attemptId) async {
     if (_selectedFiles.isEmpty && 
         _editCommentController.text.isEmpty && 
@@ -229,6 +236,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     }
   }
 
+  /// данная функция начинает редактирование попытки
   void _startEditing(Map<String, dynamic> attempt) {
     setState(() {
       _isEditing = true;
@@ -240,6 +248,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     });
   }
 
+  /// данная функция отменяет редактирование попытки
   void _cancelEditing() {
     setState(() {
       _isEditing = false;
@@ -251,6 +260,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     });
   }
 
+  /// данная функция переключает состояние удаления файла
   void _toggleFileRemoval(int fileId) {
     setState(() {
       if (_filesToRemove.contains(fileId)) {
@@ -261,6 +271,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     });
   }
 
+  /// данная функция скачивает файл преподавателя
   Future<void> _downloadTeacherFile(Map<String, dynamic> file) async {
     try {
       String fileUrl = file['file']?.toString() ?? '';
@@ -298,6 +309,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     }
   }
 
+  /// данная функция скачивает файл отправленного задания
   Future<void> _downloadSubmissionFile(String fileUrl, String fileName) async {
     try {
       if (fileUrl.isEmpty) {
@@ -331,6 +343,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     }
   }
 
+  /// данная функция проверяет статус оценки задания
   bool _checkAssignmentGrading({
     required String gradingType,
     required dynamic passingScore,
@@ -382,6 +395,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     return false;
   }
 
+  /// данная функция создает виджет статусного бейджа
   Widget _buildStatusBadge(String status, String description, String color) {
     Color badgeColor;
     IconData icon;
@@ -425,6 +439,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     );
   }
 
+  /// данная функция создает виджет оценки
   Widget _buildGradeWidget(Map<String, dynamic>? feedback, String gradingType, int? maxScore, int? passingScore) {
     if (feedback == null) return const SizedBox();
     
@@ -553,6 +568,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     );
   }
 
+  /// данная функция создает виджет карточки попытки
   Widget _buildAttemptCard(Map<String, dynamic> attempt) {
     final theme = Theme.of(context);
     final status = attempt['status'] as Map<String, dynamic>? ?? {};
@@ -1147,6 +1163,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     );
   }
 
+  /// данная функция создает виджет строки с информацией
   Widget _buildInfoRow(IconData icon, String label, String? value, [Color? valueColor]) {
     final theme = Theme.of(context);
     return Padding(

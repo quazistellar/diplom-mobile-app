@@ -10,6 +10,7 @@ import '../utils/snackbar_helper.dart';
 import '../widgets/review_section.dart';
 import 'course_materials_screen.dart';
 
+/// данный класс отображает экран деталей курса
 class CourseDetailScreen extends StatefulWidget {
   final int courseId;
   final Map<String, dynamic> courseData;
@@ -56,6 +57,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     super.dispose();
   }
 
+  /// данный метод декодирует текст отзыва
   String _decodeReviewText(String text) {
     try {
       if (text.startsWith('Р') || text.contains('Р')) {
@@ -72,37 +74,45 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     }
   }
 
+  /// данный метод возвращает статус курса
   String _getCourseStatus() {
     if (!_course.isActive) return 'Неактивен';
     return 'Активен';
   }
 
+  /// данный метод возвращает цвет статуса курса
   Color _getStatusColor() {
     if (!_course.isActive) return Colors.red;
     return Colors.green;
   }
 
+  /// данный метод возвращает текст статуса наполнения
   String _getCompletionText() {
     return _course.isCompleted == true ? 'Завершено' : 'Пополняется';
   }
 
+  /// данный метод возвращает цвет статуса наполнения
   Color _getCompletionColor() {
     return _course.isCompleted == true ? Colors.green : Colors.orange;
   }
 
+  /// данный метод возвращает текст о количестве мест
   String _getMaxPlacesText() {
     if (_course.maxPlaces == null) return 'Неограниченно';
     return '${_course.maxPlaces} мест';
   }
 
+  /// данный метод возвращает текст о сертификате
   String _getCertificateText() {
     return _course.hasCertificate ? 'Предусмотрен' : 'Не предусмотрен';
   }
 
+  /// данный метод возвращает цвет индикатора сертификата
   Color _getCertificateColor() {
     return _course.hasCertificate ? Colors.green : Colors.grey;
   }
 
+  /// данный метод выполняет оплату курса
   Future<void> _payForCourse(AuthProvider authProvider) async {
     if (_isLoading) return;
     
@@ -175,6 +185,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     }
   }
 
+  /// данный метод выполняет запись на курс
   Future<void> _enrollToCourse(AuthProvider authProvider) async {
     if (_isLoading) return;
     
@@ -199,6 +210,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     }
   }
 
+  /// данный метод загружает отзывы о курсе
   Future<void> _loadReviews() async {
     if (_loadingReviews) return;
     
@@ -234,6 +246,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     }
   }
 
+  /// данный метод загружает материалы курса
   Future<void> _loadCourseMaterials() async {
     if (_loadingMaterials) return;
     
@@ -288,6 +301,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     }
   }
 
+  /// данный метод загружает процент завершения курса
   Future<void> _loadCompletionPercentage(AuthProvider authProvider) async {
     if (_hasLoadedCompletion) return;
     
@@ -311,6 +325,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     }
   }
 
+  /// данный метод показывает диалог повторной записи на курс
   Future<void> _showEnrollAgainDialog(BuildContext context, AuthProvider authProvider) async {
     final shouldEnroll = await showDialog<bool>(
       context: context,
@@ -338,6 +353,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     }
   }
 
+  /// данный метод создает виджет карточки деталей
   Widget _buildDetailCard({
     required IconData icon,
     required String title,
@@ -384,6 +400,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
+  /// данный метод создает виджет материалов курса
   Widget _buildCourseMaterials() {
     if (_loadingMaterials) {
       return const Padding(

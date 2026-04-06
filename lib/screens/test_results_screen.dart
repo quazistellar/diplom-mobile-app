@@ -5,6 +5,7 @@ import '../providers/theme_provider.dart';
 import '../models/test.dart';
 import '../utils/snackbar_helper.dart';
 
+/// данный класс отображает экран с деталями результата теста
 class TestResultScreen extends StatefulWidget {
   final int testResultId;
   final int courseId;
@@ -32,6 +33,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
     _loadResultDetails();
   }
   
+  /// данный метод загружает детали результата теста
   Future<void> _loadResultDetails() async {
     setState(() {
       _isLoading = true;
@@ -55,10 +57,12 @@ class _TestResultScreenState extends State<TestResultScreen> {
     }
   }
   
+  /// данный метод возвращает на предыдущий экран
   void _goBack() {
     Navigator.pop(context);
   }
   
+  /// данный метод возвращает статус теста
   String _getTestStatus(Map<String, dynamic> testResult) {
     final gradingForm = testResult['grading_form']?.toString().toLowerCase();
     final totalScore = testResult['total_score'] ?? 0;
@@ -97,6 +101,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
     return 'Не оценен';
   }
   
+  /// данный метод возвращает цвет статуса теста
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Сдан':
@@ -112,6 +117,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
     }
   }
   
+  /// данный метод возвращает иконку статуса теста
   IconData _getStatusIcon(String status) {
     switch (status) {
       case 'Сдан':
@@ -127,6 +133,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
     }
   }
   
+  /// данный метод возвращает описание системы оценивания
   String _getScoringDescription(Map<String, dynamic> testResult) {
     final gradingForm = testResult['grading_form']?.toString().toLowerCase();
     final passingScore = testResult['passing_score'] ?? 0;
@@ -151,12 +158,14 @@ class _TestResultScreenState extends State<TestResultScreen> {
     return 'Тест оценен по балльной системе.';
   }
   
+  /// данный метод проверяет, используется ли балльная система оценивания
   bool _isPointsGrading(Map<String, dynamic> testResult) {
     final gradingForm = testResult['grading_form']?.toString().toLowerCase();
     final isPassed = testResult['is_passed'];
     return gradingForm == 'points' || isPassed == null;
   }
   
+  /// данный метод создает виджет ответа на вопрос
   Widget _buildAnswerWidget(Map<String, dynamic> question) {
     final answerType = question['answer_type']?.toString().toLowerCase() ?? '';
     final userAnswer = question['user_answer'] ?? {};
@@ -172,6 +181,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
     return _buildTextAnswer(question);
   }
   
+  /// данный метод создает виджет текстового ответа
   Widget _buildTextAnswer(Map<String, dynamic> question) {
     final userAnswer = question['user_answer'] ?? {};
     final isCorrect = question['is_correct'] == true;
@@ -235,6 +245,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
     );
   }
   
+  /// данный метод создает виджет ответа с выбором вариантов
   Widget _buildChoiceAnswer(Map<String, dynamic> question) {
     final userAnswer = question['user_answer'] ?? {};
     final isCorrect = question['is_correct'] == true;
@@ -353,6 +364,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
     );
   }
   
+  /// данный метод создает виджет ответа на сопоставление
   Widget _buildMatchingAnswer(Map<String, dynamic> question) {
     final userAnswer = question['user_answer'] ?? {};
     final isCorrect = question['is_correct'] == true;
@@ -481,6 +493,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
     );
   }
   
+  /// данный метод форматирует дату
   String _formatDate(dynamic date) {
     if (date == null) return 'Не указана';
     if (date is String) {
@@ -578,6 +591,7 @@ class _TestResultScreenState extends State<TestResultScreen> {
     );
   }
   
+  /// данный метод создает список вопросов
   List<Widget> _buildQuestionsList() {
     final questions = _resultData!['questions'] as List? ?? [];
     
@@ -663,192 +677,150 @@ class _TestResultScreenState extends State<TestResultScreen> {
     }).toList();
   }
   
-Widget _buildMainInfoCard(ThemeData theme) {
-  final testResult = _resultData!['test_result'] ?? {};
-  final totalScore = testResult['total_score'] ?? 0;
-  final maxScore = testResult['max_score'] ?? 1;
-  final passingScore = testResult['passing_score'] ?? 0;
-  final percentage = maxScore > 0 ? (totalScore / maxScore * 100).toInt() : 0;
-  final isPassedByScore = percentage >= passingScore;
-  final isPointsSystem = _isPointsGrading(testResult);
-  final status = _getTestStatus(testResult);
-  
-  return Card(
-    margin: const EdgeInsets.only(bottom: 16),
-    elevation: 3,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            testResult['test_name']?.toString() ?? 'Тест',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          
-          const SizedBox(height: 12),
-          
-          Row(
-            children: [
-              Icon(_getStatusIcon(status), color: _getStatusColor(status), size: 24),
-              const SizedBox(width: 8),
-              Text(
-                status,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: _getStatusColor(status),
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 8),
-          
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isPointsSystem ? Colors.blue.withOpacity(0.1) : Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+  /// данный метод создает основную карточку с информацией о тесте
+  Widget _buildMainInfoCard(ThemeData theme) {
+    final testResult = _resultData!['test_result'] ?? {};
+    final totalScore = testResult['total_score'] ?? 0;
+    final maxScore = testResult['max_score'] ?? 1;
+    final passingScore = testResult['passing_score'] ?? 0;
+    final percentage = maxScore > 0 ? (totalScore / maxScore * 100).toInt() : 0;
+    final isPassedByScore = percentage >= passingScore;
+    final isPointsSystem = _isPointsGrading(testResult);
+    final status = _getTestStatus(testResult);
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              testResult['test_name']?.toString() ?? 'Тест',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-            child: Row(
+            
+            const SizedBox(height: 12),
+            
+            Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: isPointsSystem ? Colors.blue : Colors.green,
-                  size: 20,
-                ),
+                Icon(_getStatusIcon(status), color: _getStatusColor(status), size: 24),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _getScoringDescription(testResult),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isPointsSystem ? Colors.blue : Colors.green,
-                    ),
+                Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: _getStatusColor(status),
                   ),
                 ),
               ],
             ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
+            
+            const SizedBox(height: 8),
+            
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isPointsSystem ? Colors.blue.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: isPointsSystem ? Colors.blue : Colors.green,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _getScoringDescription(testResult),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isPointsSystem ? Colors.blue : Colors.green,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Баллы', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                        Text(
-                          '$totalScore/$maxScore',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: isPointsSystem ? Colors.blue : Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Text('Процент', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                        Text(
-                          '$percentage%',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: isPointsSystem ? Colors.blue : Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 16),
-                
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        Text('Попытка', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                        Text(
-                          '${testResult['attempt_number'] ?? 1}',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Text('Время', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                        Text(
-                          '${testResult['time_spent'] ?? 0} сек',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Text('Дата', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                        Text(
-                          _formatDate(testResult['completion_date']),
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          if (isPointsSystem && passingScore > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
+            
+            const SizedBox(height: 16),
+            
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Column(
                 children: [
-                  Divider(color: Colors.grey[300]),
-                  const SizedBox(height: 8),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        isPassedByScore ? Icons.check_circle : Icons.cancel,
-                        color: isPassedByScore ? Colors.green : Colors.red,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const Text('Баллы', style: TextStyle(fontSize: 14, color: Colors.grey)),
                           Text(
-                            'Проходной балл: $passingScore%',
+                            '$totalScore/$maxScore',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: isPassedByScore ? Colors.green : Colors.red,
+                              color: isPointsSystem ? Colors.blue : Colors.green,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text('Процент', style: TextStyle(fontSize: 14, color: Colors.grey)),
                           Text(
-                            'Ваш результат: $percentage%',
+                            '$percentage%',
                             style: TextStyle(
-                              fontSize: 12,
-                              color: isPassedByScore ? Colors.green : Colors.red,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: isPointsSystem ? Colors.blue : Colors.green,
                             ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          Text('Попытка', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                          Text(
+                            '${testResult['attempt_number'] ?? 1}',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Text('Время', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                          Text(
+                            '${testResult['time_spent'] ?? 0} сек',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Text('Дата', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                          Text(
+                            _formatDate(testResult['completion_date']),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -857,9 +829,52 @@ Widget _buildMainInfoCard(ThemeData theme) {
                 ],
               ),
             ),
-        ],
+            
+            if (isPointsSystem && passingScore > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Column(
+                  children: [
+                    Divider(color: Colors.grey[300]),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isPassedByScore ? Icons.check_circle : Icons.cancel,
+                          color: isPassedByScore ? Colors.green : Colors.red,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Проходной балл: $passingScore%',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: isPassedByScore ? Colors.green : Colors.red,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Ваш результат: $percentage%',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isPassedByScore ? Colors.green : Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

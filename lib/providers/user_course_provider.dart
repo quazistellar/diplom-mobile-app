@@ -13,6 +13,7 @@ class UserCourseProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<Course> get userCourses => _userCourses;
 
+  /// данная функция загружает курсы пользователя
   Future<void> loadUserCourses() async {
     if (!await _apiClient.isAuthenticated()) {
       _userCourses = [];
@@ -80,7 +81,7 @@ class UserCourseProvider with ChangeNotifier {
         );
       }).toList();
       
-      print('🔍 Loaded user courses: ${_userCourses.map((c) => '${c.id} (active: ${c.isActiveEnrollment})').toList()}');
+      print('Loaded user courses: ${_userCourses.map((c) => '${c.id} (active: ${c.isActiveEnrollment})').toList()}');
     } catch (e) {
       print('Error loading user courses: $e');
       _errorMessage = e.toString();
@@ -90,17 +91,17 @@ class UserCourseProvider with ChangeNotifier {
     }
   }
 
-  /// проверяет, есть ли у пользователя запись на курс (любая, активная или нет)
+  /// данная функция проверяет, есть ли у пользователя запись на курс
   bool isUserEnrolled(int courseId) {
     return _userCourses.any((course) => course.id == courseId);
   }
 
-  /// проверяет, активна ли запись пользователя на курс
+  /// данная функция проверяет, активна ли запись пользователя на курс
   bool isUserActiveEnrolled(int courseId) {
     return _userCourses.any((course) => course.id == courseId && course.isActiveEnrollment == true);
   }
 
-  /// получает курс из списка записанных
+  /// данная функция получает курс из списка записанных
   Course? getUserCourse(int courseId) {
     try {
       return _userCourses.firstWhere((course) => course.id == courseId);
@@ -109,12 +110,13 @@ class UserCourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция выполняет запись пользователя на курс
   Future<void> enrollToCourse(int courseId) async {
     _setLoading(true);
     _clearError();
 
     try {
-      print('🔍 Enrolling to course $courseId...');
+      print('Enrolling to course $courseId...');
 
       final data = await _apiClient.get<Map<String, dynamic>>(
         '/user-courses/',
@@ -128,10 +130,10 @@ class UserCourseProvider with ChangeNotifier {
         final userCourseId = userCourseData['id'];
         final isActive = userCourseData['is_active'] ?? false;
         
-        print('🔍 Found existing enrollment: $userCourseId, current active: $isActive');
+        print('Found existing enrollment: $userCourseId, current active: $isActive');
         
         if (isActive == true) {
-          print('🔍 Enrollment already active');
+          print('Enrollment already active');
         } else {
           
           final updateData = {
@@ -166,6 +168,7 @@ class UserCourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция выполняет выход пользователя с курса
   Future<void> leaveCourse(int courseId) async {
     _setLoading(true);
     _clearError();
@@ -222,6 +225,7 @@ class UserCourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция возвращает ID платежа для курса
   String? getPaymentIdForCourse(int courseId) {
     try {
       final course = _userCourses.firstWhere(
@@ -234,6 +238,7 @@ class UserCourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция возвращает дату платежа для курса
   String? getPaymentDateForCourse(int courseId) {
     try {
       final course = _userCourses.firstWhere(
@@ -246,14 +251,17 @@ class UserCourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция возвращает количество активных курсов
   int getActiveCoursesCount() {
     return _userCourses.where((course) => course.isActiveEnrollment == true && course.isCompleted != true).length;
   }
 
+  /// данная функция возвращает количество завершенных курсов
   int getCompletedCoursesCount() {
     return _userCourses.where((course) => course.isCompleted == true).length;
   }
 
+  /// данная функция парсит ошибку записи на курс
   String _parseEnrollError(dynamic e) {
     final errorMessage = e.toString();
     
@@ -271,6 +279,7 @@ class UserCourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция парсит ошибку выхода с курса
   String _parseLeaveError(dynamic e) {
     final errorMessage = e.toString();
     
@@ -283,21 +292,25 @@ class UserCourseProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция очищает данные курсов пользователя
   void clearData() {
     _userCourses = [];
     notifyListeners();
   }
 
+  /// данная функция очищает сообщение об ошибке
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
+  /// данная функция устанавливает состояние загрузки
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
+  /// данная функция очищает ошибку
   void _clearError() {
     _errorMessage = null;
   }

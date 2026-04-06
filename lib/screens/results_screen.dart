@@ -10,6 +10,7 @@ import '../utils/snackbar_helper.dart';
 import 'base_navigation_screen.dart';
 import 'certificate_detail_screen.dart';
 
+/// данный класс отображает экран результатов и сертификатов пользователя
 class ResultsScreen extends BaseNavigationScreen {
   const ResultsScreen({super.key});
 
@@ -29,6 +30,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     });
   }
 
+  /// данный метод загружает данные о результатах и сертификатах
   Future<void> _loadData() async {
     if (!mounted) return;
 
@@ -50,6 +52,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     }
   }
 
+  /// данный метод проверяет доступные сертификаты для завершенных курсов
   Future<void> _checkAllCertificates() async {
     setState(() => _isCheckingCertificates = true);
 
@@ -114,6 +117,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     }
   }
 
+  /// данный метод скачивает сертификат
   Future<void> _downloadCertificate(int certificateId) async {
     if (!mounted) return;
 
@@ -130,6 +134,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     }
   }
 
+  /// данный метод показывает диалог об успешном скачивании
   void _showDownloadSuccessDialog(String filePath) {
     showDialog(
       context: context,
@@ -244,6 +249,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     );
   }
 
+  /// данный метод создает вкладку со статистикой
   Widget _buildStatisticsTab(
     ThemeData theme,
     ProgressProvider progressProvider,
@@ -445,6 +451,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     );
   }
 
+  /// данный метод создает вкладку с сертификатами
   Widget _buildCertificatesTab(
     ThemeData theme,
     ProgressProvider progressProvider,
@@ -649,6 +656,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     );
   }
 
+  /// данный метод создает виджет требования авторизации
   Widget _buildAuthRequired(ThemeData theme) {
     return Center(
       child: Column(
@@ -673,6 +681,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     );
   }
 
+  /// данный метод создает элемент статистики
   Widget _buildStatItem({
     required IconData icon,
     required String label,
@@ -696,6 +705,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     );
   }
 
+  /// данный метод создает деталь сертификата
   Widget _buildCertificateDetail({
     required IconData icon,
     required String label,
@@ -721,6 +731,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     );
   }
 
+  /// данный метод создает диаграмму прогресса
   Widget _buildProgressChart(ThemeData theme, int totalCourses, int completedCourses) {
     final completionRate = totalCourses == 0 ? 0.0 : (completedCourses / totalCourses * 100);
 
@@ -770,6 +781,7 @@ class _ResultsScreenState extends BaseNavigationScreenState<ResultsScreen> {
     );
   }
 
+  /// данный метод создает элемент легенды
   Widget _buildLegendItem({
     required Color color,
     required String label,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'assignment.dart';
 
+/// данный класс представляет попытку выполнения задания
 class AssignmentAttempt {
   final int id;
   final int attemptNumber;
@@ -34,6 +35,7 @@ class AssignmentAttempt {
     required this.rawData,
   });
 
+  /// данная функция создает объект попытки выполнения из JSON
   factory AssignmentAttempt.fromJson(Map<String, dynamic> json) {
     final status = AssignmentStatus.fromJson(json['status'] ?? {});
     
@@ -59,6 +61,7 @@ class AssignmentAttempt {
     );
   }
 
+  /// данная функция парсит дату из различных форматов
   static DateTime? _parseDate(dynamic date) {
     if (date == null) return null;
     try {
@@ -68,6 +71,7 @@ class AssignmentAttempt {
     }
   }
 
+  /// данная функция проверяет, завершена ли попытка
   bool get isCompleted {
     if (feedback != null) {
       return AssignmentGradingChecker.check(
@@ -81,6 +85,7 @@ class AssignmentAttempt {
     return status.name.toLowerCase() == 'завершено';
   }
 
+  /// данная функция возвращает отображаемый статус
   String get displayStatus {
     if (feedback != null) {
       if (isCompleted) return 'Завершено';
@@ -89,6 +94,7 @@ class AssignmentAttempt {
     return status.name;
   }
 
+  /// данная функция возвращает цвет статуса
   Color get statusColor {
     if (isCompleted) return Colors.green;
     if (feedback != null) return Colors.amber;
@@ -98,6 +104,7 @@ class AssignmentAttempt {
   }
 }
 
+/// данный класс представляет статус попытки выполнения
 class AssignmentStatus {
   final String name;
   final String description;
@@ -111,6 +118,7 @@ class AssignmentStatus {
     required this.canEdit,
   });
 
+  /// данная функция создает объект статуса из JSON
   factory AssignmentStatus.fromJson(Map<String, dynamic> json) {
     return AssignmentStatus(
       name: json['name']?.toString() ?? 'Неизвестно',
@@ -121,6 +129,7 @@ class AssignmentStatus {
   }
 }
 
+/// данный класс представляет файл, прикрепленный к заданию
 class AssignmentFile {
   final int id;
   final String fileName;
@@ -136,6 +145,7 @@ class AssignmentFile {
     this.uploadedAt,
   });
 
+  /// данная функция создает объект файла из JSON
   factory AssignmentFile.fromJson(Map<String, dynamic> json) {
     return AssignmentFile(
       id: json['id'] ?? 0,
@@ -146,6 +156,7 @@ class AssignmentFile {
     );
   }
 
+  /// данная функция парсит дату из различных форматов
   static DateTime? _parseDate(dynamic date) {
     if (date == null) return null;
     try {
@@ -156,6 +167,7 @@ class AssignmentFile {
   }
 }
 
+/// данный класс представляет детальную информацию о задании
 class AssignmentDetail {
   final Assignment assignment;
   final List<AssignmentAttempt> attempts;
@@ -173,6 +185,7 @@ class AssignmentDetail {
     required this.currentAttemptsCount,
   });
 
+  /// данная функция создает объект детальной информации о задании из JSON
   factory AssignmentDetail.fromJson(Map<String, dynamic> json) {
     final assignmentData = json['assignment'] ?? {};
     final attemptsData = json['attempts'] as List? ?? [];

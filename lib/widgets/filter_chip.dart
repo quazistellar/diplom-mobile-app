@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// данный класс отображает пользовательский чип для фильтров
 class CustomFilterChip extends StatelessWidget {
   final IconData icon;
   final String label;

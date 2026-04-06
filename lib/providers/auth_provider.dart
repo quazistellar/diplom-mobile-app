@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
@@ -12,55 +13,145 @@ class AuthProvider with ChangeNotifier {
   bool _isLoginInProgress = false;
   User? _currentUser;
   
+  bool _isBlocked = false;
+  int _remainingAttempts = 5;
+  int _maxAttempts = 5;
+  int _blockMinutesLeft = 0;
+  int _blockSecondsLeft = 0; 
+  Timer? _blockTimer;
+  
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   User? get currentUser => _currentUser;
   bool get isLoginInProgress => _isLoginInProgress; 
   bool get isAuthenticated => _currentUser != null;
-
- Future<void> login(String username, String password, bool rememberMe) async {
-  if (_isLoginInProgress) return; 
   
-  _isLoginInProgress = true; 
-  _setLoading(true);
-  _clearError();
+  bool get isBlocked => _isBlocked;
+  int get remainingAttempts => _remainingAttempts;
+  int get maxAttempts => _maxAttempts;
+  int get blockMinutesLeft => _blockMinutesLeft;
+  int get blockSecondsLeft => _blockSecondsLeft; 
 
-  try {
-    print('AuthProvider: начало авторизации...');
-    
-    final response = await _apiClient.post<Map<String, dynamic>>(
-      '/auth/token/',
-      data: {'username': username, 'password': password},
-      isPublic: true,
-    );
-    
-    final accessToken = response['access'];
-    final refreshToken = response['refresh'];
-    
-    if (accessToken == null || refreshToken == null) {
-      throw const ApiException(message: 'Сервер не вернул токены авторизации');
+  /// данная функция проверяет статус блокировки перед входом
+  Future<bool> checkBlockStatus(String username) async {
+    if (username.isEmpty) {
+      return false;
     }
     
-    await _apiClient.saveTokens(accessToken, refreshToken, username, rememberMe);
-    await _loadCurrentUser();
-    
-    if (_currentUser == null) {
-      throw const ApiException(message: 'Не удалось загрузить данные пользователя');
+    try {
+      final status = await _apiClient.checkLoginStatus(username);
+      _isBlocked = status['blocked'] ?? false;
+      _remainingAttempts = status['remainingAttempts'] ?? 5;
+      _maxAttempts = status['maxAttempts'] ?? 5;
+      _blockMinutesLeft = status['minutesLeft'] ?? 0;
+      _blockSecondsLeft = _blockMinutesLeft * 60; 
+      if (_isBlocked && _blockSecondsLeft > 0) {
+        _startBlockTimer();
+      }
+      
+      notifyListeners();
+      return _isBlocked;
+    } catch (e) {
+      return false;
     }
-    
-    notifyListeners();
-    
-  } catch (e) {
-    _errorMessage = _parseErrorMessage(e);
-    await _apiClient.clearTokens();
-    _currentUser = null;
-    rethrow;
-  } finally {
-    _setLoading(false);
-    _isLoginInProgress = false; 
   }
-}
 
+  /// данная функция запускает таймер блокировки (обратный отсчет в секундах)
+  void _startBlockTimer() {
+    _blockTimer?.cancel();
+    _blockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_blockSecondsLeft > 0) {
+        _blockSecondsLeft--;
+        _blockMinutesLeft = (_blockSecondsLeft / 60).ceil();
+        notifyListeners();
+      } else {
+        _blockTimer?.cancel();
+        _isBlocked = false;
+        _blockMinutesLeft = 0;
+        _blockSecondsLeft = 0;
+        _apiClient.clearBlockInfo();
+        notifyListeners();
+      }
+    });
+  }
+
+  /// данная функция выполняет вход пользователя в систему
+  Future<void> login(String username, String password, bool rememberMe) async {
+    if (_isLoginInProgress) return;
+    
+    _isLoginInProgress = true;
+    _setLoading(true);
+    _clearError();
+
+    try {
+      print('AuthProvider: начало авторизации...');
+      
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/auth/login/',
+        data: {'username': username, 'password': password, 'remember_me': rememberMe},
+        isPublic: true,
+      );
+      
+      final accessToken = response['access'];
+      final refreshToken = response['refresh'];
+      
+      if (accessToken == null || refreshToken == null) {
+        throw const ApiException(message: 'Сервер не вернул токены авторизации');
+      }
+      
+      await _apiClient.saveTokens(accessToken, refreshToken, username, rememberMe);
+      await _apiClient.clearBlockInfo();
+      await _loadCurrentUser();
+      
+      _isBlocked = false;
+      _remainingAttempts = _maxAttempts;
+      _blockMinutesLeft = 0;
+      _blockSecondsLeft = 0;
+      _blockTimer?.cancel();
+      
+      if (_currentUser == null) {
+        throw const ApiException(message: 'Не удалось загрузить данные пользователя');
+      }
+      
+      notifyListeners();
+      
+    } catch (e) {
+      _errorMessage = _parseErrorMessage(e);
+      
+      if (e is ApiException && e.data != null) {
+        if (e.data is Map) {
+          final errorData = e.data as Map<String, dynamic>;
+          
+          if (errorData.containsKey('remaining_attempts')) {
+            _remainingAttempts = errorData['remaining_attempts'];
+          }
+          
+          if (errorData.containsKey('blocked') && errorData['blocked'] == true) {
+            _isBlocked = true;
+            _blockMinutesLeft = errorData['minutes_left'] ?? 0;
+            _blockSecondsLeft = _blockMinutesLeft * 60;
+            _startBlockTimer();
+          }
+          
+          if (errorData.containsKey('max_attempts')) {
+            _maxAttempts = errorData['max_attempts'];
+          }
+          
+          notifyListeners();
+        }
+      }
+      
+      await _apiClient.clearTokens();
+      _currentUser = null;
+      notifyListeners();
+      rethrow;
+    } finally {
+      _setLoading(false);
+      _isLoginInProgress = false;
+    }
+  }
+
+  /// данная функция выполняет регистрацию нового пользователя
   Future<void> register({
     required String email,
     required String password,
@@ -104,6 +195,13 @@ class AuthProvider with ChangeNotifier {
         await _apiClient.saveUserId(_currentUser!.id);
       }
       
+      await _apiClient.clearBlockInfo();
+      _isBlocked = false;
+      _remainingAttempts = _maxAttempts;
+      _blockMinutesLeft = 0;
+      _blockSecondsLeft = 0;
+      _blockTimer?.cancel();
+      
       await _loadCoursesData();
       
     } catch (e) {
@@ -114,13 +212,19 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция выполняет выход пользователя из системы
   Future<void> logout() async {
     try {
       _setLoading(true);
       await _apiClient.clearTokens();
+      await _apiClient.clearBlockInfo();
       _currentUser = null;
-
-      
+      _isBlocked = false;
+      _remainingAttempts = _maxAttempts;
+      _blockMinutesLeft = 0;
+      _blockSecondsLeft = 0;
+      _blockTimer?.cancel();
+      notifyListeners();
     } catch (e) {
       print('Ошибка при выходе: $e');
     } finally {
@@ -128,38 +232,38 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция проверяет статус авторизации пользователя
   Future<bool> checkAuth() async {
-  try {
-    
-    if (_currentUser != null) {
-      return true;
-    }
-    
-    final isAuthenticated = await _apiClient.isAuthenticated();
-    
-    if (isAuthenticated) {
-
-      try {
-        await _loadCurrentUser();
-        
-        if (_currentUser != null) {
-          await _loadCoursesData();
-          return true;
-        } else {
+    try {
+      if (_currentUser != null) {
+        return true;
+      }
+      
+      final isAuthenticated = await _apiClient.isAuthenticated();
+      
+      if (isAuthenticated) {
+        try {
+          await _loadCurrentUser();
+          
+          if (_currentUser != null) {
+            await _loadCoursesData();
+            return true;
+          } else {
+            await _apiClient.clearTokens();
+            return false;
+          }
+        } catch (e) {
           await _apiClient.clearTokens();
           return false;
         }
-      } catch (e) {
-        await _apiClient.clearTokens();
-        return false;
       }
+      return false;
+    } catch (e) {
+      return false;
     }
-    return false;
-  } catch (e) {
-    return false;
   }
-}
 
+  /// данная функция загружает данные текущего пользователя
   Future<void> _loadCurrentUser() async {
     try {
       final userData = await _apiClient.get<Map<String, dynamic>>('/users/me/');
@@ -173,16 +277,19 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция загружает данные курсов пользователя
   Future<void> _loadCoursesData() async {
     notifyListeners();
   }
 
+  /// данная функция обновляет данные пользователя
   Future<void> refreshUserData() async {
     if (isAuthenticated) {
       await _loadCurrentUser();
     }
   }
 
+  /// данная функция обновляет профиль пользователя
   Future<void> updateProfile(Map<String, dynamic> data) async {
     _setLoading(true);
     _clearError();
@@ -201,6 +308,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция изменяет пароль пользователя
   Future<void> changePassword(String oldPassword, String newPassword) async {
     _setLoading(true);
     _clearError();
@@ -221,65 +329,66 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция очищает сообщение об ошибке
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
+  /// данная функция сбрасывает состояние авторизации
   void resetAuthState() {
     _currentUser = null;
+    _isBlocked = false;
+    _remainingAttempts = _maxAttempts;
+    _blockMinutesLeft = 0;
+    _blockSecondsLeft = 0;
+    _blockTimer?.cancel();
     notifyListeners();
   }
 
+  /// данная функция устанавливает состояние загрузки
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
+  /// данная функция очищает ошибку
   void _clearError() {
     _errorMessage = null;
   }
 
-
- String _parseErrorMessage(dynamic e) {
+  /// данная функция парсит сообщение об ошибке
+  String _parseErrorMessage(dynamic e) {
+    
     if (e is ApiException) {
-      if (e.data != null) {
-        if (e.data is Map) {
-          final errorData = e.data as Map<String, dynamic>;
-          
-          if (errorData.containsKey('detail')) {
-            return _translateErrorMessage(errorData['detail'].toString());
-          }
-          
-          if (errorData.containsKey('non_field_errors') && errorData['non_field_errors'] is List) {
-            final errors = errorData['non_field_errors'] as List;
-            if (errors.isNotEmpty) {
-              return _translateErrorMessage(errors.first.toString());
-            }
-          }
-          
-          if (errorData.containsKey('error')) {
-            return _translateErrorMessage(errorData['error'].toString());
-          }
-          
-          if (errorData.containsKey('message')) {
-            return _translateErrorMessage(errorData['message'].toString());
-          }
-          
-          final fieldErrors = <String>[];
-          errorData.forEach((key, value) {
-            if (key != 'detail' && key != 'non_field_errors') {
-              if (value is List && value.isNotEmpty) {
-                fieldErrors.add('${_translateFieldName(key)}: ${_translateErrorMessage(value.first.toString())}');
-              } else if (value is String) {
-                fieldErrors.add('${_translateFieldName(key)}: ${_translateErrorMessage(value)}');
-              }
-            }
-          });
-          
-          if (fieldErrors.isNotEmpty) {
-            return fieldErrors.join('\n');
-          }
+      
+      if (e.data != null && e.data is Map) {
+        final errorData = e.data as Map<String, dynamic>;
+        
+        if (errorData.containsKey('remaining_attempts')) {
+          _remainingAttempts = errorData['remaining_attempts'];
+          _maxAttempts = errorData['max_attempts'] ?? 5;
+          notifyListeners();
+        }
+        
+        if (errorData.containsKey('blocked') && errorData['blocked'] == true) {
+          _isBlocked = true;
+          _blockMinutesLeft = errorData['minutes_left'] ?? 0;
+          _blockSecondsLeft = _blockMinutesLeft * 60;
+          _startBlockTimer();
+          notifyListeners();
+        }
+        
+        if (errorData.containsKey('message')) {
+          return _translateErrorMessage(errorData['message'].toString());
+        }
+        
+        if (errorData.containsKey('detail')) {
+          return _translateErrorMessage(errorData['detail'].toString());
+        }
+        
+        if (errorData.containsKey('error')) {
+          return _translateErrorMessage(errorData['error'].toString());
         }
       }
       
@@ -299,9 +408,14 @@ class AuthProvider with ChangeNotifier {
       return 'Нет подключения к серверу. Проверьте интернет-соединение.';
     }
     
+    if (e.toString().contains('429')) {
+      return 'Слишком много попыток входа. Попробуйте позже.';
+    }
+    
     return 'Ошибка авторизации. Попробуйте позже.';
   }
 
+  /// данная функция переводит сообщение об ошибке
   String _translateErrorMessage(String message) {
     final Map<String, String> translations = {
       'No active account found with the given credentials': 'Неверное имя пользователя или пароль',
@@ -321,6 +435,7 @@ class AuthProvider with ChangeNotifier {
       'Password is too short': 'Пароль слишком короткий',
       'This password is too common': 'Этот пароль слишком простой',
       'This password is entirely numeric': 'Пароль не может состоять только из цифр',
+      'Too many login attempts': 'Слишком много попыток входа',
     };
     
     for (var entry in translations.entries) {
@@ -332,6 +447,7 @@ class AuthProvider with ChangeNotifier {
     return message;
   }
 
+  /// данная функция переводит название поля
   String _translateFieldName(String fieldName) {
     final Map<String, String> fieldTranslations = {
       'username': 'Имя пользователя',
@@ -346,5 +462,11 @@ class AuthProvider with ChangeNotifier {
     };
     
     return fieldTranslations[fieldName] ?? fieldName;
+  }
+  
+  @override
+  void dispose() {
+    _blockTimer?.cancel();
+    super.dispose();
   }
 }

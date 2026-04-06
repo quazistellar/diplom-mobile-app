@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// данный класс представляет модель задания
 class Assignment {
   final int id;
   final String name;
@@ -29,6 +30,7 @@ class Assignment {
     required this.rawData,
   });
 
+  /// данная функция создает объект задания из JSON
   factory Assignment.fromJson(Map<String, dynamic> json) {
     return Assignment(
       id: json['id'] ?? 0,
@@ -50,6 +52,7 @@ class Assignment {
     );
   }
 
+  /// данная функция парсит дату из различных форматов
   static DateTime? _parseDate(dynamic date) {
     if (date == null) return null;
     try {
@@ -59,6 +62,7 @@ class Assignment {
     }
   }
 
+  /// данная функция проверяет, завершено ли задание
   bool isCompleted() {
     if (userStatus?.submissionStatus == 'завершено') {
       return true;
@@ -87,6 +91,7 @@ class Assignment {
     return false;
   }
 
+  /// данная функция возвращает текстовое описание статуса
   String getStatusText() {
     if (isCompleted()) return 'Завершено';
     if (feedback != null) return 'На доработке';
@@ -96,6 +101,7 @@ class Assignment {
     return userStatus?.submissionStatus.isNotEmpty == true ? userStatus!.submissionStatus : 'Не сдано';
   }
 
+  /// данная функция возвращает цвет статуса
   Color getStatusColor() {
     if (isCompleted()) return Colors.green;
     if (feedback != null) return Colors.amber;
@@ -105,6 +111,7 @@ class Assignment {
   }
 }
 
+/// данный класс представляет статус выполнения задания пользователем
 class AssignmentUserStatus {
   final String submissionStatus;
   final int? score;
@@ -118,6 +125,7 @@ class AssignmentUserStatus {
     this.submissionDate,
   });
 
+  /// данная функция создает объект статуса выполнения из JSON
   factory AssignmentUserStatus.fromJson(Map<String, dynamic> json) {
     return AssignmentUserStatus(
       submissionStatus: json['submission_status']?.toString().toLowerCase() ?? '',
@@ -127,6 +135,7 @@ class AssignmentUserStatus {
     );
   }
 
+  /// данная функция парсит дату из различных форматов
   static DateTime? _parseDate(dynamic date) {
     if (date == null) return null;
     try {
@@ -137,6 +146,7 @@ class AssignmentUserStatus {
   }
 }
 
+/// данный класс представляет обратную связь по заданию
 class AssignmentFeedback {
   final int? score;
   final bool? isPassed;
@@ -152,6 +162,7 @@ class AssignmentFeedback {
     this.givenAt,
   });
 
+  /// данная функция создает объект обратной связи из JSON
   factory AssignmentFeedback.fromJson(Map<String, dynamic> json) {
     return AssignmentFeedback(
       score: json['score'],
@@ -162,6 +173,7 @@ class AssignmentFeedback {
     );
   }
 
+  /// данная функция парсит дату из различных форматов
   static DateTime? _parseDate(dynamic date) {
     if (date == null) return null;
     try {
@@ -172,7 +184,9 @@ class AssignmentFeedback {
   }
 }
 
+/// данный класс предоставляет утилиты для проверки оценивания заданий
 class AssignmentGradingChecker {
+  /// данная функция проверяет, зачтено ли задание
   static bool check({
     required String gradingType,
     required dynamic passingScore,
@@ -188,6 +202,7 @@ class AssignmentGradingChecker {
     return false;
   }
 
+  /// данная функция проверяет балльную систему оценивания
   static bool _checkPointsGrading(dynamic passingScore, dynamic maxScore, dynamic userScore) {
     if (userScore == null || maxScore == null) return false;
 
@@ -205,6 +220,7 @@ class AssignmentGradingChecker {
     }
   }
 
+  /// данная функция проверяет систему "зачёт/незачёт"
   static bool _checkPassFailGrading(dynamic feedbackIsPassed, dynamic userScore, dynamic maxScore) {
     if (feedbackIsPassed != null) {
       return feedbackIsPassed == true;
@@ -221,6 +237,7 @@ class AssignmentGradingChecker {
     return false;
   }
 
+  /// данная функция преобразует значение в double
   static double _toDouble(dynamic value) {
     if (value is int) return value.toDouble();
     if (value is double) return value;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+/// данный класс содержит в себе цветовую тему и палитру приложения
 class AppTheme {
   static const Color primaryColor = Color(0xFF8A4FFF);
   static const Color primaryDark = Color(0xFF6B31CC);

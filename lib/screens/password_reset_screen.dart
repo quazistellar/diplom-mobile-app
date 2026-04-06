@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/api_client.dart';
 import '../providers/theme_provider.dart';
 
+/// данный класс отображает экран восстановления пароля
 class PasswordResetScreen extends StatefulWidget {
   final String email;
   
@@ -55,6 +56,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     super.dispose();
   }
   
+  /// данный метод запускает таймер для повторной отправки кода
   void _startResendTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
@@ -69,6 +71,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     });
   }
   
+  /// данный метод отправляет начальный код подтверждения
   Future<void> _sendInitialCode() async {
     if (_isSendingCode) return;
     
@@ -106,6 +109,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     }
   }
   
+  /// данный метод проверяет введенный код подтверждения
   Future<void> _verifyCode() async {
     final code = _codeControllers.map((c) => c.text).join();
     if (code.length != 6) {
@@ -151,6 +155,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     }
   }
   
+  /// данный метод выполняет сброс пароля
   Future<void> _resetPassword() async {
     final newPassword = _newPasswordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
@@ -216,6 +221,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     }
   }
   
+  /// данный метод отправляет код повторно
   Future<void> _resendCode() async {
     if (!_canResendCode || _isSendingCode) return;
     
@@ -256,6 +262,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     }
   }
   
+  /// данный метод создает виджет ввода кода
   Widget _buildCodeInputStep(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,7 +353,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
               Icon(Icons.access_time, size: 18, color: theme.colorScheme.onSurface.withOpacity(0.7)),
               const SizedBox(width: 8),
               Text(
-                'Не пришел код?',
+                'Нет кода?',
                 style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
               ),
               const SizedBox(width: 8),
@@ -395,6 +402,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     );
   }
   
+  /// данный метод создает виджет ввода нового пароля
   Widget _buildNewPasswordStep(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

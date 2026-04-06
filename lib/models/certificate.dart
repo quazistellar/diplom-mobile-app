@@ -1,5 +1,6 @@
 import 'course.dart';
 
+/// данный класс представляет модель сертификата
 class Certificate {
   final int id;
   final String certificateNumber;
@@ -15,6 +16,7 @@ class Certificate {
     required this.rawData,
   });
 
+  /// данная функция создает объект сертификата из JSON
   factory Certificate.fromJson(Map<String, dynamic> json) {
     return Certificate(
       id: json['id'] ?? 0,
@@ -25,6 +27,7 @@ class Certificate {
     );
   }
 
+  /// данная функция парсит дату из различных форматов
   static DateTime? _parseDate(dynamic date) {
     if (date == null) return null;
     try {
@@ -34,11 +37,13 @@ class Certificate {
     }
   }
 
+  /// данная функция возвращает отформатированную дату выдачи
   String get formattedDate {
     return '${issueDate.day.toString().padLeft(2, '0')}.${issueDate.month.toString().padLeft(2, '0')}.${issueDate.year}';
   }
 }
 
+/// данный класс представляет сертификат с информацией о курсе
 class CertificateWithCourse {
   final Certificate certificate;
   final Course? course;
@@ -48,6 +53,7 @@ class CertificateWithCourse {
     this.course,
   });
 
+  /// данная функция создает объект сертификата с курсом из JSON
   factory CertificateWithCourse.fromJson(Map<String, dynamic> json) {
     return CertificateWithCourse(
       certificate: Certificate.fromJson(json['certificate'] ?? {}),
@@ -56,6 +62,7 @@ class CertificateWithCourse {
   }
 }
 
+/// данный класс представляет результат проверки возможности получения сертификата
 class CertificateEligibility {
   final bool eligible;
   final String? message;
@@ -67,6 +74,7 @@ class CertificateEligibility {
     this.course,
   });
 
+  /// данная функция создает объект проверки возможности получения сертификата из JSON
   factory CertificateEligibility.fromJson(Map<String, dynamic> json) {
     return CertificateEligibility(
       eligible: json['eligible'] == true,

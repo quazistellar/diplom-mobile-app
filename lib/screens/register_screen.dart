@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../utils/snackbar_helper.dart';
 
+/// данный класс отображает экран регистрации
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -343,6 +344,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  /// данный метод создает виджет ошибки
   Widget _buildError(AuthProvider authProvider, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -371,6 +373,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  /// данный метод создает виджет загрузки
   Widget _buildLoading(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -380,6 +383,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  /// данный метод создает кнопку регистрации
   Widget _buildRegisterButton(AuthProvider authProvider) {
     return SizedBox(
       width: double.infinity,
@@ -399,6 +403,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  /// данный метод выполняет регистрацию пользователя
   Future<void> _register() async {
     if (!_isAgreed) {
       SnackBarHelper.showWarning(context, 'Необходимо принять соглашение на обработку персональных данных');
@@ -413,9 +418,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final patronymic = _patronymicController.text.trim();
     final username = _usernameController.text.trim();
 
-    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty || firstName.isEmpty || 
-        lastName.isEmpty || username.isEmpty) {
-      SnackBarHelper.showWarning(context, 'Заполните все обязательные поля');
+    if (email.isEmpty) {
+      SnackBarHelper.showWarning(context, 'Введите свою почту!');
+      return;
+    }
+
+    if (password.isEmpty) {
+      SnackBarHelper.showWarning(context, 'Придумайте пароль!');
+      return;
+    }
+
+    if (confirmPassword.isEmpty) {
+      SnackBarHelper.showWarning(context, 'Подтвердите пароль!');
+      return;
+    }
+
+    if (firstName.isEmpty) {
+      SnackBarHelper.showWarning(context, 'Введите своё имя!');
+      return;
+    }
+
+    if (lastName.isEmpty) {
+      SnackBarHelper.showWarning(context, 'Введите свою фамилию!');
+      return;
+    }
+
+    if (username.isEmpty) {
+      SnackBarHelper.showWarning(context, 'Придумайте имя пользователя!');
       return;
     }
 

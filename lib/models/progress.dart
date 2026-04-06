@@ -1,6 +1,7 @@
 import 'package:unireax_mobile_diplom/models/assignment.dart';
 import 'package:unireax_mobile_diplom/models/test.dart';
 
+/// данный класс представляет прогресс по курсу
 class CourseProgress {
   final int courseId;
   final String courseName;
@@ -24,6 +25,7 @@ class CourseProgress {
     required this.rawData,
   });
 
+  /// данная функция создает объект прогресса курса из JSON
   factory CourseProgress.fromJson(Map<String, dynamic> json) {
     return CourseProgress(
       courseId: json['id'] ?? 0,
@@ -39,6 +41,7 @@ class CourseProgress {
   }
 }
 
+/// данный класс представляет лекцию с материалами (заданиями и тестами)
 class LectureWithMaterials {
   final Lecture lecture;
   final List<Assignment> assignments;
@@ -50,6 +53,7 @@ class LectureWithMaterials {
     required this.tests,
   });
 
+  /// данная функция создает объект лекции с материалами из JSON
   factory LectureWithMaterials.fromJson(Map<String, dynamic> json) {
     return LectureWithMaterials(
       lecture: Lecture.fromJson(json['lecture'] ?? {}),
@@ -63,6 +67,7 @@ class LectureWithMaterials {
   }
 }
 
+/// данный класс представляет лекцию
 class Lecture {
   final int id;
   final String name;
@@ -78,6 +83,7 @@ class Lecture {
     required this.order,
   });
 
+  /// данная функция создает объект лекции из JSON
   factory Lecture.fromJson(Map<String, dynamic> json) {
     return Lecture(
       id: json['id'] ?? 0,
@@ -89,6 +95,7 @@ class Lecture {
   }
 }
 
+/// данный класс представляет сводную статистику
 class StatisticsSummary {
   final int totalCourses;
   final int completedCourses;
@@ -114,6 +121,7 @@ class StatisticsSummary {
     required this.testsPercentage,
   });
 
+  /// данная функция создает объект сводной статистики из JSON
   factory StatisticsSummary.fromJson(Map<String, dynamic> json) {
     final stats = json['statistics'] ?? json;
     
