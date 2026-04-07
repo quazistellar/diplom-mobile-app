@@ -44,7 +44,6 @@ class FileHelper {
         dio.options.headers['Authorization'] = 'Bearer $token';
       }
 
-      // Скачиваем файл
       await dio.download(
         fileUrl,
         savePath,

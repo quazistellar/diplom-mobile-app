@@ -18,7 +18,9 @@ class AuthProvider with ChangeNotifier {
   int _maxAttempts = 5;
   int _blockMinutesLeft = 0;
   int _blockSecondsLeft = 0; 
+  
   Timer? _blockTimer;
+  final _timerStreamController = StreamController<int>.broadcast();
   
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -30,46 +32,67 @@ class AuthProvider with ChangeNotifier {
   int get remainingAttempts => _remainingAttempts;
   int get maxAttempts => _maxAttempts;
   int get blockMinutesLeft => _blockMinutesLeft;
-  int get blockSecondsLeft => _blockSecondsLeft; 
+  int get blockSecondsLeft => _blockSecondsLeft;
+  
+  Stream<int> get timerStream => _timerStreamController.stream;
 
-  /// данная функция проверяет статус блокировки перед входом
-  Future<bool> checkBlockStatus(String username) async {
-    if (username.isEmpty) {
-      return false;
-    }
-    
+  /// данная функция проверяет статус блокировки перед входом (только по IP)
+  Future<bool> checkBlockStatus() async {
     try {
-      final status = await _apiClient.checkLoginStatus(username);
+      final status = await _apiClient.checkLoginStatus();
+      final wasBlocked = _isBlocked;
+      
       _isBlocked = status['blocked'] ?? false;
       _remainingAttempts = status['remainingAttempts'] ?? 5;
       _maxAttempts = status['maxAttempts'] ?? 5;
-      _blockMinutesLeft = status['minutesLeft'] ?? 0;
-      _blockSecondsLeft = _blockMinutesLeft * 60; 
+      
+      if (status.containsKey('secondsLeft') && status['secondsLeft'] > 0) {
+        _blockSecondsLeft = status['secondsLeft'];
+        _blockMinutesLeft = (_blockSecondsLeft / 60).ceil();
+      } else {
+        _blockMinutesLeft = status['minutesLeft'] ?? 0;
+        _blockSecondsLeft = _blockMinutesLeft * 60;
+      }
+      
+      print('checkBlockStatus: blocked=$_isBlocked, attempts=$_remainingAttempts, secondsLeft=$_blockSecondsLeft');
+      
       if (_isBlocked && _blockSecondsLeft > 0) {
-        _startBlockTimer();
+        _startBlockCheckTimer();
+      }
+      
+      if (wasBlocked && !_isBlocked) {
+        _blockTimer?.cancel();
+        notifyListeners();
       }
       
       notifyListeners();
       return _isBlocked;
     } catch (e) {
+      print('Ошибка checkBlockStatus: $e');
       return false;
     }
   }
 
-  /// данная функция запускает таймер блокировки (обратный отсчет в секундах)
-  void _startBlockTimer() {
+  void _startBlockCheckTimer() {
     _blockTimer?.cancel();
     _blockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_blockSecondsLeft > 0) {
         _blockSecondsLeft--;
         _blockMinutesLeft = (_blockSecondsLeft / 60).ceil();
-        notifyListeners();
+        
+        if (_blockSecondsLeft % 30 == 0 || _blockSecondsLeft <= 5) {
+          print('Таймер блокировки: $_blockSecondsLeft секунд осталось');
+        }
+        
+        _timerStreamController.add(_blockSecondsLeft);
       } else {
-        _blockTimer?.cancel();
+        timer.cancel();
         _isBlocked = false;
         _blockMinutesLeft = 0;
         _blockSecondsLeft = 0;
-        _apiClient.clearBlockInfo();
+        _remainingAttempts = _maxAttempts;
+        _timerStreamController.add(0);
+        print('Блокировка снята, вход снова доступен');
         notifyListeners();
       }
     });
@@ -84,7 +107,7 @@ class AuthProvider with ChangeNotifier {
     _clearError();
 
     try {
-      print('AuthProvider: начало авторизации...');
+      print('AuthProvider: начало авторизации для пользователя: $username');
       
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/auth/login/',
@@ -108,38 +131,20 @@ class AuthProvider with ChangeNotifier {
       _blockMinutesLeft = 0;
       _blockSecondsLeft = 0;
       _blockTimer?.cancel();
+      _timerStreamController.add(0);
       
       if (_currentUser == null) {
         throw const ApiException(message: 'Не удалось загрузить данные пользователя');
       }
       
+      print('Успешный вход! Оставшиеся попытки сброшены до $_remainingAttempts');
       notifyListeners();
       
     } catch (e) {
+      print('Ошибка входа: $e');
       _errorMessage = _parseErrorMessage(e);
       
-      if (e is ApiException && e.data != null) {
-        if (e.data is Map) {
-          final errorData = e.data as Map<String, dynamic>;
-          
-          if (errorData.containsKey('remaining_attempts')) {
-            _remainingAttempts = errorData['remaining_attempts'];
-          }
-          
-          if (errorData.containsKey('blocked') && errorData['blocked'] == true) {
-            _isBlocked = true;
-            _blockMinutesLeft = errorData['minutes_left'] ?? 0;
-            _blockSecondsLeft = _blockMinutesLeft * 60;
-            _startBlockTimer();
-          }
-          
-          if (errorData.containsKey('max_attempts')) {
-            _maxAttempts = errorData['max_attempts'];
-          }
-          
-          notifyListeners();
-        }
-      }
+      await _handleLoginError(e);
       
       await _apiClient.clearTokens();
       _currentUser = null;
@@ -148,6 +153,73 @@ class AuthProvider with ChangeNotifier {
     } finally {
       _setLoading(false);
       _isLoginInProgress = false;
+    }
+  }
+
+  Future<void> _handleLoginError(dynamic e) async {
+    if (e is ApiException && e.data != null && e.data is Map) {
+      final errorData = e.data as Map<String, dynamic>;
+      
+      print('_handleLoginError: получены данные ошибки: $errorData');
+      
+      if (errorData.containsKey('remaining_attempts')) {
+        final newAttempts = errorData['remaining_attempts'] as int;
+        if (newAttempts != _remainingAttempts) {
+          _remainingAttempts = newAttempts;
+          print('Обновлено количество попыток: $_remainingAttempts из $_maxAttempts');
+        }
+      }
+      
+      if (errorData.containsKey('max_attempts')) {
+        _maxAttempts = errorData['max_attempts'] as int;
+      }
+      
+      if (errorData.containsKey('blocked') && errorData['blocked'] == true) {
+        _isBlocked = true;
+        _blockMinutesLeft = errorData['minutes_left'] ?? 0;
+        _blockSecondsLeft = errorData['seconds_left'] ?? (_blockMinutesLeft * 60);
+        print('Аккаунт заблокирован на $_blockMinutesLeft минут (${_blockSecondsLeft} секунд)');
+        _startBlockCheckTimer();
+      } else {
+        if (_remainingAttempts > 0 && _remainingAttempts < _maxAttempts) {
+          print('Осталось попыток: $_remainingAttempts из $_maxAttempts');
+        }
+      }
+      
+      notifyListeners();
+    }
+  }
+
+  /// обновление статуса блокировки и попыток (только по IP)
+  Future<void> refreshBlockStatus() async {
+    try {
+      final status = await _apiClient.checkLoginStatus();
+      final wasBlocked = _isBlocked;
+      
+      _isBlocked = status['blocked'] ?? false;
+      _remainingAttempts = status['remainingAttempts'] ?? _maxAttempts;
+      
+      if (status.containsKey('secondsLeft') && status['secondsLeft'] > 0) {
+        _blockSecondsLeft = status['secondsLeft'];
+        _blockMinutesLeft = (_blockSecondsLeft / 60).ceil();
+      } else {
+        _blockMinutesLeft = status['minutesLeft'] ?? 0;
+        _blockSecondsLeft = _blockMinutesLeft * 60;
+      }
+      
+      print('refreshBlockStatus: blocked=$_isBlocked, attempts=$_remainingAttempts');
+      
+      if (wasBlocked && !_isBlocked) {
+        _blockTimer?.cancel();
+        _timerStreamController.add(0);
+        notifyListeners();
+      } else if (_isBlocked && _blockSecondsLeft > 0) {
+        _startBlockCheckTimer();
+      }
+      
+      notifyListeners();
+    } catch (e) {
+      print('Ошибка refreshBlockStatus: $e');
     }
   }
 
@@ -201,6 +273,7 @@ class AuthProvider with ChangeNotifier {
       _blockMinutesLeft = 0;
       _blockSecondsLeft = 0;
       _blockTimer?.cancel();
+      _timerStreamController.add(0);
       
       await _loadCoursesData();
       
@@ -224,6 +297,7 @@ class AuthProvider with ChangeNotifier {
       _blockMinutesLeft = 0;
       _blockSecondsLeft = 0;
       _blockTimer?.cancel();
+      _timerStreamController.add(0);
       notifyListeners();
     } catch (e) {
       print('Ошибка при выходе: $e');
@@ -343,6 +417,7 @@ class AuthProvider with ChangeNotifier {
     _blockMinutesLeft = 0;
     _blockSecondsLeft = 0;
     _blockTimer?.cancel();
+    _timerStreamController.add(0);
     notifyListeners();
   }
 
@@ -359,23 +434,22 @@ class AuthProvider with ChangeNotifier {
 
   /// данная функция парсит сообщение об ошибке
   String _parseErrorMessage(dynamic e) {
-    
     if (e is ApiException) {
-      
       if (e.data != null && e.data is Map) {
         final errorData = e.data as Map<String, dynamic>;
         
         if (errorData.containsKey('remaining_attempts')) {
-          _remainingAttempts = errorData['remaining_attempts'];
+          _remainingAttempts = errorData['remaining_attempts'] as int;
           _maxAttempts = errorData['max_attempts'] ?? 5;
+          print('_parseErrorMessage: попытки обновлены до $_remainingAttempts');
           notifyListeners();
         }
         
         if (errorData.containsKey('blocked') && errorData['blocked'] == true) {
           _isBlocked = true;
           _blockMinutesLeft = errorData['minutes_left'] ?? 0;
-          _blockSecondsLeft = _blockMinutesLeft * 60;
-          _startBlockTimer();
+          _blockSecondsLeft = errorData['seconds_left'] ?? (_blockMinutesLeft * 60);
+          _startBlockCheckTimer();
           notifyListeners();
         }
         
@@ -467,6 +541,7 @@ class AuthProvider with ChangeNotifier {
   @override
   void dispose() {
     _blockTimer?.cancel();
+    _timerStreamController.close();
     super.dispose();
   }
 }

@@ -131,19 +131,33 @@ class _AuthScreenState extends State<AuthScreen> {
               
               const SizedBox(height: 32),
               
-              if (authProvider.errorMessage != null && !authProvider.isBlocked)
-                _buildError(authProvider, theme, authProvider.remainingAttempts),
+              Selector<AuthProvider, String?>(
+                selector: (_, provider) => provider.errorMessage,
+                builder: (context, errorMessage, child) {
+                  if (errorMessage != null && !authProvider.isBlocked) {
+                    return _buildError(authProvider, theme, authProvider.remainingAttempts);
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
               
-              if (authProvider.isBlocked)
-                _buildBlockedWarning(theme, authProvider.blockMinutesLeft),
+              const BlockedWarningWidget(),
               
               _buildLoginForm(theme),
               const SizedBox(height: 32),
               
-              if (_isLoggingIn || authProvider.isLoading)
-                _buildLoading(theme)
-              else if (!authProvider.isBlocked)
-                _buildLoginButton(authProvider, themeManager),
+              Selector<AuthProvider, bool>(
+                selector: (_, provider) => provider.isLoading,
+                builder: (context, isLoading, child) {
+                  if (_isLoggingIn || isLoading) {
+                    return _buildLoading(theme);
+                  }
+                  if (!authProvider.isBlocked) {
+                    return _buildLoginButton(authProvider, themeManager);
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
               
               const SizedBox(height: 24),
               _buildDivider(theme),
@@ -220,87 +234,6 @@ class _AuthScreenState extends State<AuthScreen> {
         ],
       ),
     );
-  }
-
-  /// виджет блокировки
-  Widget _buildBlockedWarning(ThemeData theme, int minutesLeft) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: true);
-    final totalSeconds = authProvider.blockSecondsLeft;    
-    final minutes = totalSeconds ~/ 60;
-    final seconds = totalSeconds % 60;
-    final timeString = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red, width: 1.5),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.lock_outline, color: Colors.red, size: 48),
-          const SizedBox(height: 12),
-          Text(
-            'Доступ временно ограничен',
-            style: const TextStyle(
-              color: Colors.red,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Слишком много неудачных попыток входа.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red, fontSize: 14),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.timer, color: Colors.red, size: 16),
-                const SizedBox(width: 8),
-                Text(
-                  timeString,
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Попробуйте позже',
-            style: TextStyle(
-              color: Colors.red.withOpacity(0.7),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// форматирование времени
-  String _formatTime(int minutesLeft) {
-    if (minutesLeft >= 60) {
-      final hours = minutesLeft ~/ 60;
-      final minutes = minutesLeft % 60;
-      return '$hours:${minutes.toString().padLeft(2, '0')}:00';
-    }
-    return '$minutesLeft:00';
   }
 
   /// данная функция создает виджет формы входа
@@ -504,7 +437,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Icon(Icons.arrow_forward, size: 18),
           ],
         ),
@@ -530,7 +463,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final themeManager = Provider.of<ThemeManager>(context, listen: false);
       
-      final isBlocked = await authProvider.checkBlockStatus(username);
+      final isBlocked = await authProvider.checkBlockStatus();
       if (isBlocked) {
         if (mounted) {
           SnackBarHelper.showWarning(
@@ -697,5 +630,103 @@ class _AuthScreenState extends State<AuthScreen> {
       }
       print('Ошибка при открытии диалога: $error');
     });
+  }
+}
+
+/// виджет для отображения таймера блокировки
+class BlockTimerWidget extends StatelessWidget {
+  const BlockTimerWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<int>(
+      stream: Provider.of<AuthProvider>(context, listen: false).timerStream,
+      initialData: Provider.of<AuthProvider>(context, listen: false).blockSecondsLeft,
+      builder: (context, snapshot) {
+        final secondsLeft = snapshot.data ?? 0;
+        final minutes = secondsLeft ~/ 60;
+        final seconds = secondsLeft % 60;
+        final timeString = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+        
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.timer, color: Colors.red, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                timeString,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// виджет блокировки, который перестраивается только при изменении статуса блокировки
+class BlockedWarningWidget extends StatelessWidget {
+  const BlockedWarningWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<AuthProvider, bool>(
+      selector: (_, provider) => provider.isBlocked,
+      builder: (context, isBlocked, child) {
+        if (!isBlocked) return const SizedBox.shrink();
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.red, width: 1.5),
+          ),
+          child: Column(
+            children: [
+              const Icon(Icons.lock_outline, color: Colors.red, size: 48),
+              const SizedBox(height: 12),
+              const Text(
+                'Доступ временно ограничен',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Слишком много неудачных попыток входа.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.red, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              const BlockTimerWidget(),
+              const SizedBox(height: 4),
+              Text(
+                'Попробуйте позже',
+                style: TextStyle(
+                  color: Colors.red.withOpacity(0.7),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

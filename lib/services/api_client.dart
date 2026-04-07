@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// данный класс предоставляет клиент для работы с API
 class ApiClient {
-  // Единый URL вашего сайта на Amvera
+  // url сайта с апи
   static const String _baseUrl = 'https://unireax-moonkid.amvera.io';
   
   /// данная функция возвращает базовый URL
@@ -16,7 +16,6 @@ class ApiClient {
   /// данная функция возвращает полный URL API
   static String get apiUrl => '$baseUrl/api';
 
-  // Остальные константы
   static const String tokenKey = 'auth_token';
   static const String refreshTokenKey = 'refresh_token';
   static const String userEmailKey = 'user_email';
@@ -51,9 +50,8 @@ class ApiClient {
     ));
   }
 
-  /// функция проверки доступности URL (упрощённая, так как URL один)
+  /// функция проверки доступности URL 
   static Future<void> checkDeviceUrl() async {
-    // Теперь не нужно проверять несколько URL, просто проверяем доступность сервера
     try {
       final testUrl = '$apiUrl/auth/token/';
       final response = await http.get(
@@ -242,21 +240,19 @@ class ApiClient {
     }
   }
 
-  /// проверка статуса блокировки
-  Future<Map<String, dynamic>> checkLoginStatus(String username) async {
+  /// проверка статуса блокировки (только по IP)
+  Future<Map<String, dynamic>> checkLoginStatus() async {
     try {
-      print('🔍 ApiClient.checkLoginStatus: запрос для username: $username');
+      print('🔍 ApiClient.checkLoginStatus: запрос статуса блокировки');
       final client = await publicDio;
       
-      final response = await client.get(
-        '/api/login/status/', 
-        queryParameters: {'username': username}
-      );
+      final response = await client.get('/auth/login/status/');
 
       return {
         'blocked': response.data['blocked'] ?? false,
         'remainingAttempts': response.data['remaining_attempts'] ?? 5,
         'minutesLeft': response.data['minutes_left'] ?? 0,
+        'secondsLeft': response.data['seconds_left'] ?? 0,
         'maxAttempts': response.data['max_attempts'] ?? 5,
       };
     } catch (e) {
@@ -268,6 +264,7 @@ class ApiClient {
         'blocked': false,
         'remainingAttempts': 5,
         'minutesLeft': 0,
+        'secondsLeft': 0,
         'maxAttempts': 5,
       };
     }

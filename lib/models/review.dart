@@ -1,5 +1,3 @@
-// models/review.dart
-
 /// данный класс представляет модель отзыва на курс
 class Review {
   final int id;
