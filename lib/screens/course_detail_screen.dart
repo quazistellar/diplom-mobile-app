@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_course_provider.dart';
+import '../providers/favorite_provider.dart';
 import '../services/api_client.dart';
 import '../services/payment_service.dart';
 import '../models/course.dart';
@@ -31,6 +32,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   bool _isLoading = false;
   bool _loadingReviews = false;
   bool _loadingMaterials = false;
+  bool _isFavorited = false;
+  bool _isLoadingFavorite = false;
   List<dynamic> _reviews = [];
   List<dynamic> _lectures = [];
   List<dynamic> _tests = [];
@@ -49,6 +52,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadReviews();
       _loadCourseMaterials();
+      _checkFavoriteStatus();
     });
   }
 
@@ -112,6 +116,46 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return _course.hasCertificate ? Colors.green : Colors.grey;
   }
 
+  /// данный метод проверяет статус избранного
+  Future<void> _checkFavoriteStatus() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!authProvider.isAuthenticated) return;
+    
+    final favoriteProvider = Provider.of<FavoriteProvider>(context, listen: false);
+    final isFav = await favoriteProvider.isFavorited(widget.courseId);
+    if (mounted) {
+      setState(() => _isFavorited = isFav);
+    }
+  }
+
+  /// данный метод переключает избранное
+  Future<void> _toggleFavorite() async {
+    if (_isLoadingFavorite) return;
+    
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!authProvider.isAuthenticated) {
+      SnackBarHelper.showWarning(context, 'Для добавления в избранное необходимо войти в систему');
+      return;
+    }
+    
+    setState(() => _isLoadingFavorite = true);
+    
+    final favoriteProvider = Provider.of<FavoriteProvider>(context, listen: false);
+    final isFav = await favoriteProvider.toggleFavorite(widget.courseId);
+    
+    if (mounted) {
+      setState(() {
+        _isFavorited = isFav;
+        _isLoadingFavorite = false;
+      });
+      
+      SnackBarHelper.showSuccess(
+        context, 
+        isFav ? 'Курс добавлен в избранное' : 'Курс удалён из избранного'
+      );
+    }
+  }
+
   /// данный метод выполняет оплату курса
   Future<void> _payForCourse(AuthProvider authProvider) async {
     if (_isLoading) return;
@@ -127,16 +171,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       final paymentResult = await _apiClient.post<Map<String, dynamic>>(
         '/payments/create/${widget.courseId}/'
       );
-      
-      print('📦 Payment result: $paymentResult');
-      
+            
       if (paymentResult['success'] == true) {
         final paymentId = paymentResult['payment_id']?.toString();
         final paymentUrl = paymentResult['confirmation_url'];
         final amount = paymentResult['amount'] ?? _course.price.toString();
-        
-        print('✅ Создан платеж: $paymentId');
-        print('🔗 URL: $paymentUrl');
         
         if (paymentId == null || paymentId.isEmpty) {
           throw Exception('Не удалось получить ID платежа');
@@ -150,7 +189,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           courseName: _course.name,
           amount: double.parse(amount.toString()),
           onComplete: (success, message, returnedPaymentId) async {
-            print('🔙 Payment complete: success=$success, paymentId=$returnedPaymentId');
             
             if (success) {
               await authProvider.refreshUserData();
@@ -174,7 +212,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       }
       
     } catch (e) {
-      print('❌ Payment error: $e');
       String errorMessage = e.toString().replaceAll('Exception: ', '');
       
       if (mounted) {
@@ -321,7 +358,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         _hasLoadedCompletion = true;
       });
     } catch (e) {
-      print('Error loading completion: $e');
+      print('ошибка: $e');
     }
   }
 
@@ -540,6 +577,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: theme.appBarTheme.elevation ?? 2,
         title: const Text('Детали курса'),
+        actions: [
+          Consumer<FavoriteProvider>(
+            builder: (context, favoriteProvider, child) {
+              return IconButton(
+                icon: Icon(
+                  _isFavorited ? Icons.favorite : Icons.favorite_border,
+                  color: _isFavorited ? Colors.red : null,
+                ),
+                onPressed: _isLoadingFavorite ? null : _toggleFavorite,
+              );
+            },
+          ),
+        ],
       ),
       body: Consumer2<AuthProvider, UserCourseProvider>(
         builder: (context, authProvider, userCourseProvider, child) {
@@ -827,7 +877,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               MaterialPageRoute(
                                 builder: (context) => CourseMaterialsScreen(courseId: widget.courseId),
                               ),
-                        );
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: theme.primaryColor,

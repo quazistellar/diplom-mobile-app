@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:unireax_mobile_diplom/models/course.dart';
+import 'package:unireax_mobile_diplom/screens/post_screen.dart';
 import '../providers/progress_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/auth_provider.dart';
@@ -81,6 +82,7 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
       
       setState(() {
         _materialsByLecture = progressProvider.courseMaterials;
+        _course = progressProvider.currentCourse;
         _isLoading = false;
         _errorMessage = null;
       });
@@ -127,6 +129,136 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
     }
     
     if (mounted) setState(() {});
+  }
+
+  /// данный метод показывает диалог со ссылкой на встречу
+  void _showMeetingLinkDialog(String? meetingLink, String courseName) {
+    final theme = Theme.of(context);
+    final bool hasLink = meetingLink != null && meetingLink.isNotEmpty;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: theme.dialogTheme.backgroundColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.video_call, color: theme.primaryColor),
+            const SizedBox(width: 8),
+            const Text('Ссылка на встречу'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!hasLink)
+              Column(
+                children: [
+                  Icon(Icons.link_off, size: 48, color: Colors.grey.shade400),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Ссылка на видео-встречу пока не добавлена',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Пожалуйста, обратитесь к преподавателю или методисту',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              )
+            else
+              Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.primaryColor.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.link, color: theme.primaryColor),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: SelectableText(
+                            meetingLink,
+                            style: TextStyle(
+                              color: theme.primaryColor,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Нажмите на ссылку выше, чтобы скопировать её, или используйте кнопки ниже',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+          ],
+        ),
+        actions: [
+          if (hasLink) ...[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _copyMeetingLink(meetingLink);
+              },
+              child: const Text('Скопировать'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _openMeetingLink(meetingLink);
+              },
+              icon: const Icon(Icons.open_in_browser, size: 18),
+              label: const Text('Открыть'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.primaryColor,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Закрыть'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// данный метод копирует ссылку на встречу
+  Future<void> _copyMeetingLink(String link) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: link));
+      SnackBarHelper.showSuccess(context, 'Ссылка скопирована в буфер обмена');
+    } catch (e) {
+      SnackBarHelper.showError(context, 'Ошибка копирования ссылки');
+    }
+  }
+
+  /// данный метод открывает ссылку на встречу в браузере
+  Future<void> _openMeetingLink(String link) async {
+    try {
+      if (Platform.isWindows) {
+        await Process.run('start', [link], runInShell: true);
+      } else {
+        SnackBarHelper.showInfo(context, 'Ссылка скопирована. Откройте её в браузере.');
+        await Clipboard.setData(ClipboardData(text: link));
+      }
+    } catch (e) {
+      SnackBarHelper.showWarning(context, 'Не удалось открыть ссылку. Скопируйте её вручную.');
+    }
   }
 
   /// данный метод скачивает и открывает файл лекции
@@ -330,11 +462,33 @@ class _CourseMaterialsScreenState extends State<CourseMaterialsScreen> with Sing
           indicatorColor: theme.colorScheme.primary,
         ),
         actions: [
+          if (_course?.meetingLink != null && _course!.meetingLink!.isNotEmpty)
+            IconButton(
+              icon: Icon(Icons.video_call, color: theme.colorScheme.primary),
+              onPressed: () => _showMeetingLinkDialog(_course?.meetingLink, _course?.name ?? 'Курс'),
+              tooltip: 'Ссылка на встречу',
+            ),
           IconButton(
             icon: Icon(Icons.refresh, color: theme.colorScheme.onSurface),
             onPressed: _loadCourseMaterials,
             tooltip: 'Обновить',
           ),
+          IconButton(
+          icon: Icon(Icons.comment, color: theme.colorScheme.primary),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PostsScreen(
+                  courseId: widget.courseId,
+                  courseName: _course?.name ?? 'Курс',
+                  isTeacher: false,
+                ),
+              ),
+            );
+          },
+          tooltip: 'Объявления',
+        ),
         ],
       ),
       body: _buildBody(theme),

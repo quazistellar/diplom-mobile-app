@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/statistics_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/favorite_provider.dart';
 import '../widgets/course_card.dart';
 import '../screens/course_detail_screen.dart';
 import '../screens/base_navigation_screen.dart';
@@ -49,16 +50,20 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     try {
       final courseProvider = context.read<CourseProvider>();
       final statsProvider = context.read<StatisticsProvider>();
+      final favoriteProvider = context.read<FavoriteProvider>();
       
       await Future.wait([
-        courseProvider.fetchCourses(),
+        courseProvider.fetchPopularCourses(), 
         statsProvider.loadStatistics(),
         courseProvider.loadCourseCategories(),
         courseProvider.loadCourseTypes(),
       ]);
       
       if (context.read<AuthProvider>().isAuthenticated) {
-        await courseProvider.loadUserCourses();
+        await Future.wait([
+          courseProvider.loadUserCourses(),
+          favoriteProvider.getFavoritesCount(),
+        ]);
       }
       
     } catch (e) {
@@ -77,14 +82,18 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     try {
       final courseProvider = context.read<CourseProvider>();
       final statsProvider = context.read<StatisticsProvider>();
+      final favoriteProvider = context.read<FavoriteProvider>();
       
       await Future.wait([
-        courseProvider.fetchCourses(),
+        courseProvider.fetchPopularCourses(),
         statsProvider.loadStatistics(),
       ]);
       
       if (context.read<AuthProvider>().isAuthenticated) {
-        await courseProvider.loadUserCourses();
+        await Future.wait([
+          courseProvider.loadUserCourses(),
+          favoriteProvider.getFavoritesCount(),
+        ]);
       }
       
       _showSuccess('Данные обновлены');
@@ -138,11 +147,11 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
     final statsProvider = context.watch<StatisticsProvider>();
     
     final user = authProvider.currentUser;
-    final allCourses = courseProvider.allCourses;
+    final popularCourses = courseProvider.popularCourses;  
 
     final displayedCourses = _searchQuery.isEmpty 
-        ? allCourses.take(6).toList()
-        : allCourses.where((course) => 
+        ? popularCourses.take(6).toList()
+        : popularCourses.where((course) => 
             course.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
             (course.category?.name.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false)
           ).toList();
@@ -199,7 +208,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
               _buildCoursesList(displayedCourses, courseProvider, theme),
               const SizedBox(height: 20),
               
-              if (_searchQuery.isEmpty && allCourses.length > 6)
+              if (_searchQuery.isEmpty && popularCourses.length > 6)
                 _buildViewAllButton(theme),
               
               if (_isLoading)
@@ -235,6 +244,8 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
       onSelected: (value) {
         if (value == 'profile') {
           Navigator.pushNamed(context, '/profile');
+        } else if (value == 'favorites') {
+          Navigator.pushNamed(context, '/favorites');
         } else if (value == 'settings') {
           handleNavigationTap(4, context);
         } else if (value == 'logout') {
@@ -249,6 +260,49 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
               Icon(Icons.person, size: 20),
               SizedBox(width: 8),
               Text('Профиль'),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'favorites',
+          child: Consumer<FavoriteProvider>(
+            builder: (context, favoriteProvider, child) {
+              return Row(
+                children: [
+                  const Icon(Icons.favorite, size: 20, color: Colors.red),
+                  const SizedBox(width: 8),
+                  const Text('Избранное'),
+                  if (favoriteProvider.favoritesCount > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${favoriteProvider.favoritesCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: 'settings',
+          child: Row(
+            children: [
+              Icon(Icons.settings, size: 20),
+              SizedBox(width: 8),
+              Text('Настройки'),
             ],
           ),
         ),
@@ -395,12 +449,6 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
                   label: 'ваших активных курсов',
                   theme: theme,
                 ),
-                _buildStatCard(
-                  icon: Icons.done_all,
-                  value: context.read<CourseProvider>().getCompletedCoursesCount().toString(),
-                  label: 'ваших завершенных курсов',
-                  theme: theme,
-                ),
               ],
             ],
           ),
@@ -463,7 +511,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          _searchQuery.isEmpty ? 'Популярные курсы' : 'Результаты поиска по курсам',
+          _searchQuery.isEmpty ? 'Популярные курсы' : 'Результаты поиска',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w900,
@@ -625,6 +673,7 @@ class _MainScreenState extends BaseNavigationScreenState<MainScreen> {
                 await authProvider.logout();
                 if (mounted) {
                   context.read<CourseProvider>().clearAllFilters();
+                  context.read<FavoriteProvider>().clearData();
                   Navigator.pushReplacementNamed(context, '/auth');
                 }
               },

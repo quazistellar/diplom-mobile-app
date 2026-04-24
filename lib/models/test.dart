@@ -28,7 +28,7 @@ class Test {
     required this.rawData,
   });
 
-  /// данная функция создает объект теста из JSON
+  /// данная функция создает объект теста из json
   factory Test.fromJson(Map<String, dynamic> json) {
     return Test(
       id: json['id'] ?? 0,
@@ -111,7 +111,7 @@ class TestUserResult {
     required this.rawData,
   });
 
-  /// данная функция создает объект результата теста из JSON
+  /// данная функция создает объект результата теста из json
   factory TestUserResult.fromJson(Map<String, dynamic> json) {
     return TestUserResult(
       id: json['id'],
@@ -154,7 +154,7 @@ class TestQuestion {
     required this.rawData,
   });
 
-  /// данная функция создает объект вопроса теста из JSON
+  /// данная функция создает объект вопроса теста из json
   factory TestQuestion.fromJson(Map<String, dynamic> json) {
     String answerType = 'текст';
     if (json['answer_type'] is String) {
@@ -190,6 +190,7 @@ class TestQuestion {
     );
   }
 
+  /// данная функция нормализует тип ответа в вопросе
   static String _normalizeAnswerType(String answerType) {
     final lowerType = answerType.toLowerCase();
 
@@ -234,7 +235,7 @@ class TestChoiceOption {
     this.isCorrect,
   });
 
-  /// данная функция создает объект варианта ответа из JSON
+  /// данная функция создает объект варианта ответа из json
   factory TestChoiceOption.fromJson(Map<String, dynamic> json) {
     return TestChoiceOption(
       id: json['id'] ?? 0,
@@ -256,7 +257,7 @@ class TestMatchingPair {
     this.rightText,
   });
 
-  /// данная функция создает объект пары для сопоставления из JSON
+  /// данная функция создает объект пары для сопоставления из json
   factory TestMatchingPair.fromJson(Map<String, dynamic> json) {
     return TestMatchingPair(
       id: json['id'] ?? 0,
@@ -292,7 +293,7 @@ class TestAttempt {
     required this.percentage,
   });
 
-  /// данная функция создает объект попытки из JSON
+  /// данная функция создает объект попытки из json
   factory TestAttempt.fromJson(Map<String, dynamic> json) {
     final totalScore = json['total_score'] ?? 0;
     final maxScore = json['max_score'] ?? 100;
@@ -328,7 +329,7 @@ class TestResultDetail {
     required this.questions,
   });
 
-  /// данная функция создает объект деталей результата из JSON
+  /// данная функция создает объект деталей результата из json
   factory TestResultDetail.fromJson(Map<String, dynamic> json) {
     return TestResultDetail(
       testResult: TestResultInfo.fromJson(json['test_result'] ?? {}),
@@ -365,7 +366,7 @@ class TestResultInfo {
     this.isPassed,
   });
 
-  /// данная функция создает объект информации о результате из JSON
+  /// данная функция создает объект информации о результате из json
   factory TestResultInfo.fromJson(Map<String, dynamic> json) {
     return TestResultInfo(
       id: json['id'] ?? 0,
@@ -420,7 +421,7 @@ class TestQuestionResult {
     this.pairs,
   });
 
-  /// данная функция создает объект результата вопроса из JSON
+  /// данная функция создает объект результата вопроса из json
   factory TestQuestionResult.fromJson(Map<String, dynamic> json) {
     return TestQuestionResult(
       id: json['id'] ?? 0,
@@ -456,7 +457,7 @@ class TestChoiceResult {
     required this.isUserCorrect,
   });
 
-  /// данная функция создает объект результата выбора из JSON
+  /// данная функция создает объект результата выбора из json
   factory TestChoiceResult.fromJson(Map<String, dynamic> json) {
     return TestChoiceResult(
       id: json['id'] ?? 0,
@@ -484,7 +485,7 @@ class TestMatchingResult {
     required this.isCorrect,
   });
 
-  /// данная функция создает объект результата сопоставления из JSON
+  /// данная функция создает объект результата сопоставления из json
   factory TestMatchingResult.fromJson(Map<String, dynamic> json) {
     return TestMatchingResult(
       id: json['id'] ?? 0,

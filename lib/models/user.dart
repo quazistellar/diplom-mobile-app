@@ -18,7 +18,7 @@ class User {
     required this.rawData,
   });
 
-  /// данная функция создает объект пользователя из JSON
+  /// данная функция создает объект пользователя из json
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] ?? 0,

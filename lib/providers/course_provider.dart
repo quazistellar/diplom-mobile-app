@@ -9,6 +9,7 @@ class CourseProvider with ChangeNotifier {
   String? _errorMessage;
   List<Course> _allCourses = [];
   List<Course> _userCourses = [];
+  List<Course> _popularCourses = [];
   
 
   String? _currentSearchQuery;
@@ -26,6 +27,7 @@ class CourseProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<Course> get allCourses => _allCourses;
   List<Course> get userCourses => _userCourses;
+  List<Course> get popularCourses => _popularCourses;
   List<CourseCategory> get courseCategories => _courseCategories;
   List<CourseType> get courseTypes => _courseTypes;
 
@@ -83,6 +85,7 @@ class CourseProvider with ChangeNotifier {
     String? sortBy,
     String? sortOrder,
     bool resetFilters = false,
+    bool popularOnly = false,
   }) async {
     _setLoading(true);
     _clearError();
@@ -104,6 +107,11 @@ class CourseProvider with ChangeNotifier {
 
       final queryParams = <String, dynamic>{};
       
+      if (popularOnly) {
+        queryParams['sort_by'] = 'student_count';
+        queryParams['sort_order'] = 'desc';
+      }
+      
       if (_currentSearchQuery?.isNotEmpty == true) {
         queryParams['search'] = _currentSearchQuery;
       }
@@ -119,7 +127,7 @@ class CourseProvider with ChangeNotifier {
       if (_currentFreeOnly == true) {
         queryParams['free_only'] = 'true';
       }
-      if (_currentSortBy != null) {
+      if (_currentSortBy != null && !popularOnly) {
         queryParams['sort_by'] = _currentSortBy;
         queryParams['sort_order'] = _currentSortOrder;
       }
@@ -131,17 +139,30 @@ class CourseProvider with ChangeNotifier {
       );
       
       final results = data['results'] as List? ?? [];
-      _allCourses = results
-          .map((json) => Course.fromJson(json))
-          .toList();
+      final courses = results.map((json) => Course.fromJson(json)).toList();
+      
+      if (popularOnly) {
+        _popularCourses = courses;
+      } else {
+        _allCourses = courses;
+      }
 
     } catch (e) {
       _errorMessage = e.toString();
-      _allCourses = [];
+      if (popularOnly) {
+        _popularCourses = [];
+      } else {
+        _allCourses = [];
+      }
       rethrow;
     } finally {
       _setLoading(false);
     }
+  }
+
+  /// данная функция загружает популярные курсы
+  Future<void> fetchPopularCourses() async {
+    await fetchCourses(popularOnly: true);
   }
 
   /// данная функция загружает курсы пользователя
@@ -156,7 +177,6 @@ class CourseProvider with ChangeNotifier {
           .toList();
       notifyListeners();
     } catch (e) {
-      print('Ошибка загрузки курсов пользователя: $e');
       _userCourses = [];
     }
   }
@@ -349,7 +369,6 @@ class CourseProvider with ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
       _courseMaterials = [];
-      print('Ошибка загрузки материалов курса: $e');
     } finally {
       _setLoading(false);
     }

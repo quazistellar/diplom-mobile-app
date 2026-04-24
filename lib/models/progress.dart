@@ -53,7 +53,7 @@ class LectureWithMaterials {
     required this.tests,
   });
 
-  /// данная функция создает объект лекции с материалами из JSON
+  /// данная функция создает объект лекции с материалами из json
   factory LectureWithMaterials.fromJson(Map<String, dynamic> json) {
     return LectureWithMaterials(
       lecture: Lecture.fromJson(json['lecture'] ?? {}),
@@ -83,7 +83,7 @@ class Lecture {
     required this.order,
   });
 
-  /// данная функция создает объект лекции из JSON
+  /// данная функция создает объект лекции из json
   factory Lecture.fromJson(Map<String, dynamic> json) {
     return Lecture(
       id: json['id'] ?? 0,
@@ -121,7 +121,7 @@ class StatisticsSummary {
     required this.testsPercentage,
   });
 
-  /// данная функция создает объект сводной статистики из JSON
+  /// данная функция создает объект сводной статистики из json
   factory StatisticsSummary.fromJson(Map<String, dynamic> json) {
     final stats = json['statistics'] ?? json;
     

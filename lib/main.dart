@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
+import 'package:unireax_mobile_diplom/providers/post_provider.dart';
+import 'package:unireax_mobile_diplom/screens/deactivate_account_screen.dart';
 import 'package:unireax_mobile_diplom/services/api_client.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'screens/auth_screen.dart';
@@ -15,7 +17,8 @@ import 'screens/register_screen.dart';
 import 'screens/assignment_detail_screen.dart';
 import 'screens/test_screen.dart';
 import 'screens/test_results_screen.dart';
-import 'screens/profile_screen.dart'; 
+import 'screens/profile_screen.dart';
+import 'screens/favorites_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/certificate_provider.dart';
 import 'providers/theme_provider.dart';
@@ -24,6 +27,7 @@ import 'providers/navigation_provider.dart';
 import 'providers/course_provider.dart';
 import 'providers/user_course_provider.dart';
 import 'providers/statistics_provider.dart';
+import 'providers/favorite_provider.dart';
 
 /// данная функция является точкой входа в приложение
 void main() async {  
@@ -55,6 +59,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<CourseProvider>(create: (_) => CourseProvider()),
         ChangeNotifierProvider<UserCourseProvider>(create: (_) => UserCourseProvider()),
         ChangeNotifierProvider<StatisticsProvider>(create: (_) => StatisticsProvider()),
+        ChangeNotifierProvider<FavoriteProvider>(create: (_) => FavoriteProvider()),
+        ChangeNotifierProvider<PostProvider>(create: (_) => PostProvider()),
       ],
       child: Consumer2<ThemeManager, AuthProvider>(
         builder: (context, themeManager, authProvider, child) {
@@ -93,7 +99,9 @@ class MyApp extends StatelessWidget {
               '/progress': (context) => const ProgressScreen(),
               '/results': (context) => const ResultsScreen(),
               '/register': (context) => const RegisterScreen(),
-              '/profile': (context) => const ProfileScreen(), 
+              '/profile': (context) => const ProfileScreen(),
+              '/favorites': (context) => const FavoritesScreen(),
+              '/deactivate-account': (context) => const DeactivateAccountScreen(),
               '/password-reset': (context) {
                 final email = ModalRoute.of(context)?.settings.arguments as String;
                 return PasswordResetScreen(email: email);

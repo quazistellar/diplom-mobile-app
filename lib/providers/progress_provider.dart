@@ -6,6 +6,7 @@ import '../models/progress.dart';
 import '../models/assignment_attempt.dart';
 import '../models/test.dart';
 import '../models/certificate.dart';
+import '../models/course.dart';
 
 class ProgressProvider with ChangeNotifier {
   final ApiClient _apiClient = ApiClient();
@@ -17,6 +18,7 @@ class ProgressProvider with ChangeNotifier {
   List<LectureWithMaterials> _courseMaterials = [];
   StatisticsSummary? _courseStats;
   List<CertificateWithCourse> _certificates = [];
+  Course? _currentCourse;
   
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -24,6 +26,7 @@ class ProgressProvider with ChangeNotifier {
   List<LectureWithMaterials> get courseMaterials => _courseMaterials;
   StatisticsSummary? get courseStats => _courseStats;
   List<CertificateWithCourse> get certificates => _certificates;
+  Course? get currentCourse => _currentCourse;
   
   /// данная функция логирует сообщения
   void _log(String message) {
@@ -37,23 +40,16 @@ class ProgressProvider with ChangeNotifier {
     
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
-      }
-      
-      _log('Загружаем курсы с прогрессом...');
-      
+        throw Exception('Требуется авторизация');
+      } 
       final data = await _apiClient.get<List>('/listener/progress/');
-      
       _enrolledCourses = data
           .map((json) => CourseProgress.fromJson(json))
           .toList();
-      
-      _log('Получено ${_enrolledCourses.length} курсов');
-      
+            
     } catch (e) {
       _errorMessage = e.toString();
       _enrolledCourses = [];
-      _log('Ошибка загрузки курсов: $e');
     } finally {
       _setLoading(false);
     }
@@ -66,26 +62,26 @@ class ProgressProvider with ChangeNotifier {
     
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
+        throw Exception('Требуется авторизация');
       }
-      
-      _log('Загружаем материалы курса $courseId...');
       
       final data = await _apiClient.get<Map<String, dynamic>>(
         '/listener/progress/$courseId/materials/'
       );
+      
+      if (data['course'] != null) {
+        _currentCourse = Course.fromJson(data['course']);
+      }
       
       final materials = data['materials_by_lecture'] as List? ?? [];
       _courseMaterials = materials
           .map((json) => LectureWithMaterials.fromJson(json))
           .toList();
       
-      _log('Получено ${_courseMaterials.length} лекций с материалами');
-      
     } catch (e) {
       _errorMessage = e.toString();
       _courseMaterials = [];
-      _log('Ошибка загрузки материалов: $e');
+      _currentCourse = null;
     } finally {
       _setLoading(false);
     }
@@ -95,16 +91,12 @@ class ProgressProvider with ChangeNotifier {
   Future<Map<String, dynamic>> loadLectureDetails(int courseId, int lectureId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
+        throw Exception('Требуется авторизация');
       }
-      
-      _log('Загружаем детали лекции $lectureId...');
-      
       return await _apiClient.get(
         '/listener/progress/$courseId/lectures/$lectureId/'
       );
     } catch (e) {
-      _log('Ошибка загрузки лекции: $e');
       rethrow;
     }
   }
@@ -113,18 +105,14 @@ class ProgressProvider with ChangeNotifier {
   Future<AssignmentDetail> loadAssignmentDetails(int courseId, int assignmentId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
+        throw Exception('Требуется авторизация');
       }
-      
-      _log('Загружаем детали задания $assignmentId...');
-      
       final data = await _apiClient.get<Map<String, dynamic>>(
         '/listener/progress/$courseId/assignments/$assignmentId/'
       );
       
       return AssignmentDetail.fromJson(data);
     } catch (e) {
-      _log('Ошибка загрузки задания: $e');
       rethrow;
     }
   }
@@ -138,11 +126,8 @@ class ProgressProvider with ChangeNotifier {
   ) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
-      }
-      
-      _log('Отправляем задание $assignmentId...');
-      
+        throw Exception('Требуется авторизация');
+      }      
       final formData = FormData();
       formData.fields.add(MapEntry('comment', comment));
       formData.fields.add(MapEntry('practical_assignment', assignmentId.toString()));
@@ -156,16 +141,12 @@ class ProgressProvider with ChangeNotifier {
           ),
         ));
       }
-      
-      _log('Отправляем ${files.length} файлов...');
-      
       return await _apiClient.post(
         '/listener/progress/$courseId/assignments/$assignmentId/submit/',
         data: formData,
         isFormData: true,
       );
     } catch (e) {
-      _log('Ошибка отправки задания: $e');
       rethrow;
     }
   }
@@ -181,11 +162,9 @@ class ProgressProvider with ChangeNotifier {
   ) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
+        throw Exception('Требуется авторизация');
       }
-      
-      _log('Обновляем попытку $attemptId...');
-      
+
       final formData = FormData.fromMap({
         'comment': comment,
         'files_to_remove': filesToRemove.join(','),
@@ -207,7 +186,6 @@ class ProgressProvider with ChangeNotifier {
         isFormData: true,
       );
     } catch (e) {
-      _log('Ошибка обновления попытки: $e');
       rethrow;
     }
   }
@@ -216,14 +194,12 @@ class ProgressProvider with ChangeNotifier {
   Future<Map<String, dynamic>> getAssignmentAttempts(int courseId, int assignmentId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
+        throw Exception('Требуется авторизация');
       }
-      
       return await _apiClient.get(
         '/listener/progress/$courseId/assignments/$assignmentId/attempts/'
       );
     } catch (e) {
-      _log('Ошибка загрузки попыток: $e');
       rethrow;
     }
   }
@@ -232,7 +208,7 @@ class ProgressProvider with ChangeNotifier {
   Future<Map<String, dynamic>> getTest(int courseId, int testId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
+        throw Exception('Требуется авторизация');
       }
       
       _log('Загружаем тест $testId...');
@@ -255,14 +231,10 @@ class ProgressProvider with ChangeNotifier {
   ) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
+        throw Exception('Требуется авторизация');
       }
-      
-      _log('Отправляем тест $testId...');
-      _log('Ответов: ${answers.length}, время: ${timeSpent}с');
-      
+
       final url = '/listener/courses/$courseId/tests/$testId/';
-      
       final requestData = {
         'answers': answers,
         'time_spent': timeSpent,
@@ -274,7 +246,6 @@ class ProgressProvider with ChangeNotifier {
       );
       
     } catch (e) {
-      _log('Ошибка отправки теста: $e');
       rethrow;
     }
   }
@@ -286,9 +257,7 @@ class ProgressProvider with ChangeNotifier {
       if (token == null) {
         throw Exception('Требуется авторизация');
       }
-      
-      _log('Загружаем детали результата теста $testResultId...');
-      
+            
       final dio = Dio();
       final response = await dio.get(
         '${ApiClient.apiUrl}/listener/test-results/$testResultId/',
@@ -299,12 +268,8 @@ class ProgressProvider with ChangeNotifier {
           },
         ),
       );
-      
-      _log('Детали результата загружены');
       return response.data;
-      
     } on DioException catch (e) {
-      _log('Ошибка загрузки деталей результата: ${e}');
       throw Exception('Ошибка загрузки деталей результата: ${e}');
     }
   }
@@ -313,17 +278,14 @@ class ProgressProvider with ChangeNotifier {
   Future<Map<String, dynamic>> getTestAttempts(int courseId, int testId) async {
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
+        throw Exception('Требуется авторизация');
       }
-      
-      _log('Загружаем попытки теста $testId...');
-      
+            
       return await _apiClient.get(
         '/listener/courses/$courseId/tests/$testId/attempts/'
       );
       
     } catch (e) {
-      _log('Ошибка загрузки попыток: $e');
       rethrow;
     }
   }
@@ -335,24 +297,17 @@ class ProgressProvider with ChangeNotifier {
     
     try {
       if (!await _apiClient.isAuthenticated()) {
-        throw const ApiException(message: 'Требуется авторизация');
-      }
-      
-      _log('Загружаем результаты и сертификаты...');
-      
+        throw Exception('Требуется авторизация');
+      }      
       final data = await _apiClient.get<Map<String, dynamic>>('/listener/results/');
       _courseStats = StatisticsSummary.fromJson(data);
       _certificates = (data['certificates'] as List? ?? [])
           .map((json) => CertificateWithCourse.fromJson(json))
-          .toList();
-      
-      _log('Загружено сертификатов: ${_certificates.length}');
-      
+          .toList();      
     } catch (e) {
       _errorMessage = e.toString();
       _certificates = [];
       _courseStats = null;
-      _log('Ошибка загрузки результатов: $e');
     } finally {
       _setLoading(false);
     }
@@ -370,6 +325,7 @@ class ProgressProvider with ChangeNotifier {
     _courseMaterials = [];
     _courseStats = null;
     _certificates = [];
+    _currentCourse = null;
     notifyListeners();
   }
 
@@ -382,5 +338,22 @@ class ProgressProvider with ChangeNotifier {
   /// данная функция очищает ошибку
   void _clearError() {
     _errorMessage = null;
+  }
+
+  /// функция получения данных о баллах за курс
+  Future<Map<String, dynamic>> getCourseScore(int courseId) async {
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/listener/courses/$courseId/score/',
+      );
+      return response;
+    } catch (e) {
+      return {
+        'total_earned': 0,
+        'total_max': 0,
+        'percentage': 0,
+        'with_honors': false,
+      };
+    }
   }
 }

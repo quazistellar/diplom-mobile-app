@@ -107,4 +107,22 @@ class CertificateProvider with ChangeNotifier {
     _eligibilityData = null;
     notifyListeners();
   }
+
+  /// обновление сертификата с актуальными баллами
+  Future<Map<String, dynamic>> regenerateCertificate(int certificateId) async {
+    try {
+      if (!await _apiClient.isAuthenticated()) {
+        throw Exception('Требуется авторизация');
+      }
+      
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/listener/certificates/$certificateId/regenerate/',
+      );
+      
+      return response;
+    } catch (e) {
+      print('Ошибка обновления сертификата: $e');
+      rethrow;
+    }
+  }
 }

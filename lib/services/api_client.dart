@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiClient {
   // url сайта с апи
   static const String _baseUrl = 'https://unireax-moonkid.amvera.io';
+  /// для локальной разработки
+  ///static const String _baseUrl = 'http://localhost:8000';
   
   /// данная функция возвращает базовый URL
   static String get baseUrl => _baseUrl;
@@ -240,13 +242,16 @@ class ApiClient {
     }
   }
 
-  /// проверка статуса блокировки (только по IP)
-  Future<Map<String, dynamic>> checkLoginStatus() async {
+  /// проверка статуса блокировки по username
+  Future<Map<String, dynamic>> checkLoginStatus(String username) async {
     try {
-      print('🔍 ApiClient.checkLoginStatus: запрос статуса блокировки');
+      print('🔍 ApiClient.checkLoginStatus: запрос статуса блокировки для username: $username');
       final client = await publicDio;
       
-      final response = await client.get('/auth/login/status/');
+      final response = await client.get(
+        '/auth/login/status/',
+        queryParameters: {'username': username},
+      );
 
       return {
         'blocked': response.data['blocked'] ?? false,
@@ -598,6 +603,40 @@ class ApiClient {
       print('Ошибка сохранения файла: $e');
       throw Exception('Ошибка сохранения файла: $e');
     }
+  }
+
+  /// функция деактивации аккаунта
+  Future<Map<String, dynamic>> deactivateAccount(String password) async {
+    final client = await dio;
+    final response = await client.post(
+      '/account/deactivate/',
+      data: {
+        'password': password,
+        'confirm': true,
+      },
+    );
+    return response.data;
+  }
+
+  /// функция получения информации о деактивации
+  Future<Map<String, dynamic>> getDeactivateInfo() async {
+    final client = await dio;
+    final response = await client.get('/account/deactivate/info/');
+    return response.data;
+  }
+
+  /// функция обновления сертификата
+  Future<Map<String, dynamic>> regenerateCertificate(int certificateId) async {
+    final client = await dio;
+    final response = await client.post('/listener/certificates/$certificateId/regenerate/');
+    return response.data;
+  }
+
+  /// получение баллов за курс
+  Future<Map<String, dynamic>> getCourseScore(int courseId) async {
+    final client = await dio;
+    final response = await client.get('/listener/courses/$courseId/score/');
+    return response.data;
   }
 }
 

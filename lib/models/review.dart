@@ -20,7 +20,7 @@ class Review {
     required this.isApproved,
   });
 
-  /// данная функция создает объект отзыва из JSON
+  /// данная функция создает объект отзыва из json
   factory Review.fromJson(Map<String, dynamic> json) {
     return Review(
       id: json['id'] ?? 0,

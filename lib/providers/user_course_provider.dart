@@ -191,7 +191,7 @@ class UserCourseProvider with ChangeNotifier {
       
       
       if (userCourseId == null) {
-        throw Exception('Не удалось получить ID записи');
+        throw Exception('Не удалось получить запись на курс');
       }
       
       final updateData = {

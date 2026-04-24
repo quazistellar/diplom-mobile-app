@@ -12,7 +12,9 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:file_picker/file_picker.dart';
 import '../providers/auth_provider.dart';
+import '../providers/favorite_provider.dart';
 import '../services/api_client.dart';
+import 'deactivate_account_screen.dart';
 
 /// данный класс отображает экран профиля пользователя
 class ProfileScreen extends StatefulWidget {
@@ -791,6 +793,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// данный метод показывает диалог деактивации аккаунта
+  Future<void> _showDeactivateDialog() async {
+    final theme = Theme.of(context);
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Деактивация аккаунта'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Вы уверены, что хотите деактивировать аккаунт?',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '⚠️ Это действие приведет к:',
+              style: TextStyle(color: Colors.orange.shade700),
+            ),
+            const SizedBox(height: 8),
+            const Text('• Анонимизации ваших персональных данных'),
+            const Text('• Деактивации всех записей на курсы'),
+            const Text('• Удалению избранных курсов'),
+            const Text('• Обезличиванию ваших отзывов'),
+            const SizedBox(height: 12),
+            Text(
+              'Восстановление аккаунта возможно только через поддержку.',
+              style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Деактивировать'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const DeactivateAccountScreen(),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1134,6 +1195,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   );
                                 },
                               ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            const Divider(),
+                            const SizedBox(height: 16),
+                            ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.delete_forever,
+                                  color: Colors.red,
+                                  size: 24,
+                                ),
+                              ),
+                              title: const Text(
+                                'Деактивировать аккаунт',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: const Text(
+                                'Все ваши данные будут анонимизированы',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              trailing: const Icon(Icons.chevron_right, color: Colors.red),
+                              onTap: _showDeactivateDialog,
+                            ),
                           ],
                         ),
                       ),

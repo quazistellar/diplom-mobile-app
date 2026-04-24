@@ -194,46 +194,6 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
     );
   }
 
-  // Widget _buildAppSection(ThemeManager themeManager) {
-  //   final theme = themeManager.currentTheme;
-
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         'Приложение',
-  //         style: theme.textTheme.bodySmall!.copyWith(
-  //           fontWeight: FontWeight.w900,
-  //           color: theme.hintColor,
-  //           letterSpacing: 0.5,
-  //         ),
-  //       ),
-  //       const SizedBox(height: 12),
-  //       Card(
-  //         color: theme.cardTheme.color,
-  //         elevation: 4,
-  //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-  //         child: Column(
-  //           children: [
-  //             SettingItem(
-  //               icon: Icons.notifications,
-  //               title: 'Уведомления',
-  //               iconColor: theme.colorScheme.onSurface,
-  //               textColor: theme.colorScheme.onSurface,
-  //               trailing: Switch(
-  //                 value: _notificationsEnabled,
-  //                 onChanged: (value) => setState(() => _notificationsEnabled = value),
-  //                 activeColor: theme.colorScheme.primary,
-  //                 inactiveTrackColor: theme.dividerTheme.color ?? Colors.grey[300],
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
-
   /// данный метод создает раздел аккаунта
   Widget _buildAccountSection(ThemeManager themeManager, AuthProvider authProvider) {
     final theme = themeManager.currentTheme;
@@ -795,7 +755,7 @@ class _SettingsScreenState extends BaseNavigationScreenState<SettingsScreen> {
         courseProvider.clearAllFilters();
         userCourseProvider.clearData();
       } catch (e) {
-        debugPrint('Logout error: $e');
+        debugPrint('ошибка выхода: $e');
       }
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/auth');

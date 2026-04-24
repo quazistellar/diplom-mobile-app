@@ -105,11 +105,8 @@ class _TestScreenState extends State<TestScreen> {
             'matching_data': [],
           });
         }
-        
-        print('Инициализировано ответов: ${_answers.length}');
       });
     } catch (e) {
-      print('Ошибка загрузки теста: $e');
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
         _isLoading = false;

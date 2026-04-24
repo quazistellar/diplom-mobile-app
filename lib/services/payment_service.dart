@@ -198,13 +198,13 @@ class PaymentService {
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (int progress) {
-            print('WebView progress: $progress%');
+            print('WebView: $progress%');
           },
           onPageStarted: (String url) {
-            print('Page started: $url');
+            print('страница начала: $url');
           },
           onPageFinished: (String url) {
-            print('Page finished: $url');
+            print('страница завершения оплаты: $url');
             
             if (!paymentProcessed && (url.contains('success') || url.contains('payment-success'))) {
               paymentProcessed = true;
@@ -219,10 +219,9 @@ class PaymentService {
             }
           },
           onWebResourceError: (error) {
-            print('WebView error: $error');
+            print('webView: $error');
           },
           onNavigationRequest: (request) {
-            print('Navigation request: ${request.url}');
             
             if (!paymentProcessed && (request.url.contains('success') || request.url.contains('payment-success'))) {
               paymentProcessed = true;

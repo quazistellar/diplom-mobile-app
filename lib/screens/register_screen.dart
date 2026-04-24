@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../utils/snackbar_helper.dart';
+import 'verification_dialog.dart';
 
 /// данный класс отображает экран регистрации
 class RegisterScreen extends StatefulWidget {
@@ -24,6 +25,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isAgreed = false;
+  bool _isLoading = false;
+  
+  bool _hasMinLength = false;
+  bool _hasUpperCase = false;
+  bool _hasLowerCase = false;
+  bool _hasDigit = false;
+  bool _hasSpecialChar = false;
 
   @override
   void dispose() {
@@ -35,6 +43,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _patronymicController.dispose();
     _usernameController.dispose();
     super.dispose();
+  }
+
+  void _validatePassword(String password) {
+    setState(() {
+      _hasMinLength = password.length >= 8;
+      _hasUpperCase = password.contains(RegExp(r'[A-Z]'));
+      _hasLowerCase = password.contains(RegExp(r'[a-z]'));
+      _hasDigit = password.contains(RegExp(r'[0-9]'));
+      _hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    });
   }
 
   @override
@@ -110,17 +128,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _firstNameController,
                       decoration: InputDecoration(
                         labelText: 'Имя',
-                        labelStyle: TextStyle(
-                          fontSize: 14, 
-                        ),
                         hintText: 'Иван',
-                        hintStyle: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
                         prefixIcon: const Icon(Icons.person),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
                     
@@ -130,17 +140,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _lastNameController,
                       decoration: InputDecoration(
                         labelText: 'Фамилия',
-                        labelStyle: TextStyle(
-                          fontSize: 14, 
-                        ),
                         hintText: 'Иванов',
-                        hintStyle: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
                         prefixIcon: const Icon(Icons.person_outline),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
                     
@@ -150,17 +152,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _patronymicController,
                       decoration: InputDecoration(
                         labelText: 'Отчество (необязательно)',
-                        labelStyle: TextStyle(
-                          fontSize: 14, 
-                        ),
                         hintText: 'Иванович',
-                        hintStyle: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
                         prefixIcon: const Icon(Icons.person),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
                     
@@ -170,17 +164,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _usernameController,
                       decoration: InputDecoration(
                         labelText: 'Имя пользователя',
-                        labelStyle: TextStyle(
-                          fontSize: 14, 
-                        ),
                         hintText: 'ivanov123',
-                        hintStyle: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
                         prefixIcon: const Icon(Icons.badge),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
                     
@@ -191,46 +177,89 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: 'Электронная почта',
-                        labelStyle: TextStyle(
-                          fontSize: 14, 
-                        ),
                         hintText: 'example@email.com',
-                        hintStyle: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
                         prefixIcon: const Icon(Icons.email),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
                     
                     const SizedBox(height: 16),
                     
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Пароль',
-                        labelStyle: TextStyle(
-                          fontSize: 14, 
-                        ),
-                        hintText: 'Минимум 8 символов',
-                        hintStyle: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
-                        prefixIcon: const Icon(Icons.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          onChanged: _validatePassword,
+                          decoration: InputDecoration(
+                            labelText: 'Пароль',
+                            hintText: 'Введите пароль',
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                           ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Требования к паролю:',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.onSurface.withOpacity(0.8),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 6,
+                                children: [
+                                  _buildRequirementChip(
+                                    'Минимум 8 символов',
+                                    _hasMinLength,
+                                    theme,
+                                  ),
+                                  _buildRequirementChip(
+                                    'Заглавная буква',
+                                    _hasUpperCase,
+                                    theme,
+                                  ),
+                                  _buildRequirementChip(
+                                    'Строчная буква',
+                                    _hasLowerCase,
+                                    theme,
+                                  ),
+                                  _buildRequirementChip(
+                                    'Цифра',
+                                    _hasDigit,
+                                    theme,
+                                  ),
+                                  _buildRequirementChip(
+                                    'Спецсимвол (!@#%^&*)',
+                                    _hasSpecialChar,
+                                    theme,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     
                     const SizedBox(height: 16),
@@ -240,14 +269,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscureText: _obscureConfirmPassword,
                       decoration: InputDecoration(
                         labelText: 'Подтверждение пароля',
-                        labelStyle: TextStyle(
-                          fontSize: 14, 
-                        ),
                         hintText: 'Введите пароль еще раз',
-                        hintStyle: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -257,7 +279,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                         ),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                     ),
                     
@@ -270,45 +291,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: theme.dividerColor),
                       ),
-                      child: Column(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Checkbox(
-                                value: _isAgreed,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _isAgreed = value ?? false;
-                                  });
-                                },
-                                activeColor: theme.primaryColor,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Нажимая на кнопку "Зарегистрироваться", вы даёте своё согласие на использование ваших персональных данных',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'в соответствие с Федеральным законом от 27.07.2006 №152-ФЗ «О персональных данных» и соглашаетесь с политикой ресурса Unireax',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
+                          Checkbox(
+                            value: _isAgreed,
+                            onChanged: (value) {
+                              setState(() {
+                                _isAgreed = value ?? false;
+                              });
+                            },
+                            activeColor: theme.primaryColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Нажимая на кнопку "Зарегистрироваться", вы даёте своё согласие на использование ваших персональных данных',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 4),
+                                Text(
+                                  'в соответствие с Федеральным законом от 27.07.2006 №152-ФЗ «О персональных данных» и соглашаетесь с политикой ресурса Unireax',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -316,10 +333,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     
                     const SizedBox(height: 24),
                     
-                    if (authProvider.isLoading)
+                    if (_isLoading)
                       _buildLoading(theme)
                     else
-                      _buildRegisterButton(authProvider),
+                      _buildRegisterButton(),
                     
                     const SizedBox(height: 16),
                     
@@ -344,7 +361,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  /// данный метод создает виджет ошибки
+  Widget _buildRequirementChip(String text, bool isMet, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isMet 
+            ? Colors.green.withOpacity(0.15)
+            : theme.colorScheme.surface.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isMet ? Colors.green : theme.dividerColor,
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.circle_outlined,
+            size: 14,
+            color: isMet ? Colors.green : theme.colorScheme.onSurface.withOpacity(0.5),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: isMet 
+                  ? Colors.green 
+                  : theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildError(AuthProvider authProvider, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -373,7 +425,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  /// данный метод создает виджет загрузки
   Widget _buildLoading(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -383,12 +434,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  /// данный метод создает кнопку регистрации
-  Widget _buildRegisterButton(AuthProvider authProvider) {
+  Widget _buildRegisterButton() {
+    final isPasswordValid = _hasMinLength && _hasUpperCase && _hasLowerCase && _hasDigit && _hasSpecialChar;
+    
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _register,
+        onPressed: isPasswordValid ? _startVerification : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Colors.white,
@@ -403,7 +455,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  /// данный метод выполняет регистрацию пользователя
+  Future<void> _startVerification() async {
+    final email = _emailController.text.trim();
+    
+    if (email.isEmpty) {
+      SnackBarHelper.showWarning(context, 'Введите email');
+      return;
+    }
+    
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailRegex.hasMatch(email)) {
+      SnackBarHelper.showWarning(context, 'Введите корректный email адрес');
+      return;
+    }
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.sendVerificationCode(email);
+      
+      if (success && mounted) {
+        final isVerified = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => VerificationDialog(email: email),
+        );
+        
+        if (isVerified == true) {
+          await _register();
+        }
+      } else {
+        SnackBarHelper.showError(context, 'Не удалось отправить код подтверждения');
+      }
+    } catch (e) {
+      SnackBarHelper.showError(context, 'Ошибка отправки кода');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   Future<void> _register() async {
     if (!_isAgreed) {
       SnackBarHelper.showWarning(context, 'Необходимо принять соглашение на обработку персональных данных');
@@ -463,14 +556,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    if (!emailRegex.hasMatch(email)) {
-      SnackBarHelper.showWarning(context, 'Введите корректный email адрес');
-      return;
-    }
+    setState(() => _isLoading = true);
 
     try {
-      final authProvider = context.read<AuthProvider>();
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       
       await authProvider.register(
         email: email,
@@ -504,6 +593,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
       
       SnackBarHelper.showError(context, errorMessage);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 }

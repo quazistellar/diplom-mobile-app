@@ -36,10 +36,10 @@ class AuthProvider with ChangeNotifier {
   
   Stream<int> get timerStream => _timerStreamController.stream;
 
-  /// данная функция проверяет статус блокировки перед входом (только по IP)
-  Future<bool> checkBlockStatus() async {
+  /// проверка статуса блокировки по username
+  Future<bool> checkBlockStatus(String username) async {
     try {
-      final status = await _apiClient.checkLoginStatus();
+      final status = await _apiClient.checkLoginStatus(username);
       final wasBlocked = _isBlocked;
       
       _isBlocked = status['blocked'] ?? false;
@@ -54,7 +54,7 @@ class AuthProvider with ChangeNotifier {
         _blockSecondsLeft = _blockMinutesLeft * 60;
       }
       
-      print('checkBlockStatus: blocked=$_isBlocked, attempts=$_remainingAttempts, secondsLeft=$_blockSecondsLeft');
+      print('checkBlockStatus untuk $username: blocked=$_isBlocked, attempts=$_remainingAttempts, secondsLeft=$_blockSecondsLeft');
       
       if (_isBlocked && _blockSecondsLeft > 0) {
         _startBlockCheckTimer();
@@ -62,6 +62,7 @@ class AuthProvider with ChangeNotifier {
       
       if (wasBlocked && !_isBlocked) {
         _blockTimer?.cancel();
+        _timerStreamController.add(0);
         notifyListeners();
       }
       
@@ -73,16 +74,13 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// данная функция отвечает за таймер при блокировке входа (из-за неверных попыток)
   void _startBlockCheckTimer() {
     _blockTimer?.cancel();
     _blockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_blockSecondsLeft > 0) {
         _blockSecondsLeft--;
         _blockMinutesLeft = (_blockSecondsLeft / 60).ceil();
-        
-        if (_blockSecondsLeft % 30 == 0 || _blockSecondsLeft <= 5) {
-          print('Таймер блокировки: $_blockSecondsLeft секунд осталось');
-        }
         
         _timerStreamController.add(_blockSecondsLeft);
       } else {
@@ -91,8 +89,8 @@ class AuthProvider with ChangeNotifier {
         _blockMinutesLeft = 0;
         _blockSecondsLeft = 0;
         _remainingAttempts = _maxAttempts;
+        _errorMessage = null;
         _timerStreamController.add(0);
-        print('Блокировка снята, вход снова доступен');
         notifyListeners();
       }
     });
@@ -132,19 +130,20 @@ class AuthProvider with ChangeNotifier {
       _blockSecondsLeft = 0;
       _blockTimer?.cancel();
       _timerStreamController.add(0);
+      _errorMessage = null;
       
       if (_currentUser == null) {
         throw const ApiException(message: 'Не удалось загрузить данные пользователя');
       }
       
-      print('Успешный вход! Оставшиеся попытки сброшены до $_remainingAttempts');
+      print('Успешный вход!');
       notifyListeners();
       
     } catch (e) {
       print('Ошибка входа: $e');
       _errorMessage = _parseErrorMessage(e);
       
-      await _handleLoginError(e);
+      await _handleLoginError(e, username);
       
       await _apiClient.clearTokens();
       _currentUser = null;
@@ -156,17 +155,15 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> _handleLoginError(dynamic e) async {
+  /// данная функция получает ошибки входа
+  Future<void> _handleLoginError(dynamic e, String username) async {
     if (e is ApiException && e.data != null && e.data is Map) {
       final errorData = e.data as Map<String, dynamic>;
-      
-      print('_handleLoginError: получены данные ошибки: $errorData');
-      
+            
       if (errorData.containsKey('remaining_attempts')) {
         final newAttempts = errorData['remaining_attempts'] as int;
         if (newAttempts != _remainingAttempts) {
           _remainingAttempts = newAttempts;
-          print('Обновлено количество попыток: $_remainingAttempts из $_maxAttempts');
         }
       }
       
@@ -178,11 +175,10 @@ class AuthProvider with ChangeNotifier {
         _isBlocked = true;
         _blockMinutesLeft = errorData['minutes_left'] ?? 0;
         _blockSecondsLeft = errorData['seconds_left'] ?? (_blockMinutesLeft * 60);
-        print('Аккаунт заблокирован на $_blockMinutesLeft минут (${_blockSecondsLeft} секунд)');
         _startBlockCheckTimer();
       } else {
         if (_remainingAttempts > 0 && _remainingAttempts < _maxAttempts) {
-          print('Осталось попыток: $_remainingAttempts из $_maxAttempts');
+          print('осталось попыток: $_remainingAttempts из $_maxAttempts');
         }
       }
       
@@ -190,10 +186,10 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// обновление статуса блокировки и попыток (только по IP)
-  Future<void> refreshBlockStatus() async {
+  /// данная функция выполняет обновление статуса блокировки
+  Future<void> refreshBlockStatus(String username) async {
     try {
-      final status = await _apiClient.checkLoginStatus();
+      final status = await _apiClient.checkLoginStatus(username);
       final wasBlocked = _isBlocked;
       
       _isBlocked = status['blocked'] ?? false;
@@ -206,12 +202,11 @@ class AuthProvider with ChangeNotifier {
         _blockMinutesLeft = status['minutesLeft'] ?? 0;
         _blockSecondsLeft = _blockMinutesLeft * 60;
       }
-      
-      print('refreshBlockStatus: blocked=$_isBlocked, attempts=$_remainingAttempts');
-      
+            
       if (wasBlocked && !_isBlocked) {
         _blockTimer?.cancel();
         _timerStreamController.add(0);
+        _errorMessage = null;
         notifyListeners();
       } else if (_isBlocked && _blockSecondsLeft > 0) {
         _startBlockCheckTimer();
@@ -219,11 +214,56 @@ class AuthProvider with ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('Ошибка refreshBlockStatus: $e');
+      print('ошибка: $e');
     }
   }
 
-  /// данная функция выполняет регистрацию нового пользователя
+  /// данная функция выполняет отправку кода подтверждения на email
+  Future<bool> sendVerificationCode(String email) async {
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/auth/send-verification-code/',
+        data: {'email': email},
+        isPublic: true,
+      );
+      
+      return response['success'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// данная функция выполняет проверку кода подтверждения
+  Future<bool> verifyCode(String email, String code) async {
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/auth/verify-code/',
+        data: {'email': email, 'code': code},
+        isPublic: true,
+      );
+      
+      return response['verified'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// данная функция выполняет повторную отправку кода
+  Future<bool> resendVerificationCode(String email) async {
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/auth/resend-verification-code/',
+        data: {'email': email},
+        isPublic: true,
+      );
+      
+      return response['success'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// данная функция выполняет регистрацию пользователя в системе
   Future<void> register({
     required String email,
     required String password,
@@ -274,6 +314,7 @@ class AuthProvider with ChangeNotifier {
       _blockSecondsLeft = 0;
       _blockTimer?.cancel();
       _timerStreamController.add(0);
+      _errorMessage = null;
       
       await _loadCoursesData();
       
@@ -296,17 +337,18 @@ class AuthProvider with ChangeNotifier {
       _remainingAttempts = _maxAttempts;
       _blockMinutesLeft = 0;
       _blockSecondsLeft = 0;
+      _errorMessage = null;
       _blockTimer?.cancel();
       _timerStreamController.add(0);
       notifyListeners();
     } catch (e) {
-      print('Ошибка при выходе: $e');
+      print('ошибка при выходе: $e');
     } finally {
       _setLoading(false);
     }
   }
 
-  /// данная функция проверяет статус авторизации пользователя
+  /// данная функция выполняет проверку авторизации
   Future<bool> checkAuth() async {
     try {
       if (_currentUser != null) {
@@ -336,8 +378,8 @@ class AuthProvider with ChangeNotifier {
       return false;
     }
   }
-
-  /// данная функция загружает данные текущего пользователя
+ 
+  /// данная функция выполняет загрузку текущего пользователя
   Future<void> _loadCurrentUser() async {
     try {
       final userData = await _apiClient.get<Map<String, dynamic>>('/users/me/');
@@ -351,10 +393,11 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// данная функция загружает данные курсов пользователя
+  /// данная функция выполняет загрузку данных курсов
   Future<void> _loadCoursesData() async {
     notifyListeners();
   }
+
 
   /// данная функция обновляет данные пользователя
   Future<void> refreshUserData() async {
@@ -381,7 +424,7 @@ class AuthProvider with ChangeNotifier {
       _setLoading(false);
     }
   }
-
+  
   /// данная функция изменяет пароль пользователя
   Future<void> changePassword(String oldPassword, String newPassword) async {
     _setLoading(true);
@@ -403,36 +446,40 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// данная функция очищает сообщение об ошибке
+
+  /// данная функция выполняет очистку сообщения ошибки и обновление состояния
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
-  /// данная функция сбрасывает состояние авторизации
+  /// данная функция сбрасывает состояние аутентификации пользователя
   void resetAuthState() {
     _currentUser = null;
     _isBlocked = false;
     _remainingAttempts = _maxAttempts;
     _blockMinutesLeft = 0;
     _blockSecondsLeft = 0;
+    _errorMessage = null;
     _blockTimer?.cancel();
     _timerStreamController.add(0);
     notifyListeners();
   }
 
-  /// данная функция устанавливает состояние загрузки
+
+ /// данная функция устанавливает статус загрузки
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
-  /// данная функция очищает ошибку
+  /// данная функция выполняет очистку сообщения ошибки
   void _clearError() {
     _errorMessage = null;
   }
 
-  /// данная функция парсит сообщение об ошибке
+
+  /// данная функция парсит ошибки сообщений
   String _parseErrorMessage(dynamic e) {
     if (e is ApiException) {
       if (e.data != null && e.data is Map) {
@@ -441,7 +488,6 @@ class AuthProvider with ChangeNotifier {
         if (errorData.containsKey('remaining_attempts')) {
           _remainingAttempts = errorData['remaining_attempts'] as int;
           _maxAttempts = errorData['max_attempts'] ?? 5;
-          print('_parseErrorMessage: попытки обновлены до $_remainingAttempts');
           notifyListeners();
         }
         
@@ -488,8 +534,8 @@ class AuthProvider with ChangeNotifier {
     
     return 'Ошибка авторизации. Попробуйте позже.';
   }
-
-  /// данная функция переводит сообщение об ошибке
+ 
+  /// данная функция переводит сообщения об ошибках
   String _translateErrorMessage(String message) {
     final Map<String, String> translations = {
       'No active account found with the given credentials': 'Неверное имя пользователя или пароль',
@@ -519,23 +565,6 @@ class AuthProvider with ChangeNotifier {
     }
     
     return message;
-  }
-
-  /// данная функция переводит название поля
-  String _translateFieldName(String fieldName) {
-    final Map<String, String> fieldTranslations = {
-      'username': 'Имя пользователя',
-      'email': 'Email',
-      'password': 'Пароль',
-      'first_name': 'Имя',
-      'last_name': 'Фамилия',
-      'patronymic': 'Отчество', 
-      'old_password': 'Старый пароль',
-      'new_password': 'Новый пароль',
-      'confirm_password': 'Подтверждение пароля',
-    };
-    
-    return fieldTranslations[fieldName] ?? fieldName;
   }
   
   @override

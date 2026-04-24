@@ -48,7 +48,7 @@ class ThemeManager with ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('Error loading preferences: $e');
+      print('ошибка: $e');
     }
   }
 
@@ -61,7 +61,7 @@ class ThemeManager with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_themeKey, theme.index);
     } catch (e) {
-      print('Error saving theme: $e');
+      print('ошибка $e');
     }
   }
 
@@ -74,7 +74,7 @@ class ThemeManager with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_rememberMeKey, value);
     } catch (e) {
-      print('Error saving remember me: $e');
+      print('ошибка: $e');
     }
   }
 
@@ -87,7 +87,7 @@ class ThemeManager with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_fontSizeKey, fontSize);
     } catch (e) {
-      print('Error saving font size: $e');
+      print('ошибка: $e');
     }
   }
 

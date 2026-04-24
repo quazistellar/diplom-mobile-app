@@ -35,7 +35,7 @@ class AssignmentAttempt {
     required this.rawData,
   });
 
-  /// данная функция создает объект попытки выполнения из JSON
+  /// данная функция создает объект попытки выполнения из json
   factory AssignmentAttempt.fromJson(Map<String, dynamic> json) {
     final status = AssignmentStatus.fromJson(json['status'] ?? {});
     

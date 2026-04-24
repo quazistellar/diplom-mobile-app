@@ -80,7 +80,6 @@ class FileHelper {
         throw Exception('Не удалось открыть файл: ${result.message}');
       }
     } catch (e) {
-      print('❌ Ошибка открытия файла: $e');
       rethrow;
     }
   }
@@ -91,7 +90,6 @@ class FileHelper {
       final xFile = XFile(filePath);
       await Share.shareXFiles([xFile], text: text);
     } catch (e) {
-      print('❌ Ошибка при попытке поделиться: $e');
       rethrow;
     }
   }

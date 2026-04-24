@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+
 /// данный класс представляет модель курса
 class Course {
   final int id;
@@ -17,7 +20,8 @@ class Course {
   final bool? isEnrolled;
   final String? paymentId;      
   final bool? isActiveEnrollment;
-  final String? paymentDate;    
+  final String? paymentDate;
+  final String? meetingLink;
   final Map<String, dynamic> rawData;
 
   Course({
@@ -38,7 +42,8 @@ class Course {
     this.userCourseId, 
     this.isEnrolled,
     this.paymentId,              
-    this.paymentDate,           
+    this.paymentDate,
+    this.meetingLink,
     required this.rawData,
   });
 
@@ -64,7 +69,8 @@ class Course {
       isCompleted: json['is_completed'],
       isEnrolled: json['is_enrolled'],
       paymentId: json['payment_id']?.toString(),       
-      paymentDate: json['payment_date']?.toString(),   
+      paymentDate: json['payment_date']?.toString(),
+      meetingLink: json['code_link']?.toString(),
       rawData: json,
     );
   }
@@ -112,7 +118,84 @@ class Course {
   /// данная функция возвращает отформатированную цену
   String get displayPrice => isFree ? 'Бесплатно' : '${price.toStringAsFixed(2)} ₽';
 
-  Object? toJson() {}
+  /// данная функция создает JSON из объекта
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'course_name': name,
+      'course_description': description,
+      'course_price': price,
+      'course_hours': hours,
+      'has_certificate': hasCertificate,
+      'course_max_places': maxPlaces,
+      'course_photo_path': photoPath,
+      'is_active': isActive,
+      'is_completed': isCompleted,
+      'is_enrolled': isEnrolled,
+      'payment_id': paymentId,
+      'payment_date': paymentDate,
+      'code_link': meetingLink,
+      'category_details': category?.toJson(),
+      'type_details': type?.toJson(),
+    };
+  }
+
+  /// данная функция создает копию курса с измененными полями
+  Course copyWith({
+    int? id,
+    String? name,
+    String? description,
+    double? price,
+    int? hours,
+    bool? hasCertificate,
+    int? maxPlaces,
+    double? rating,
+    String? photoPath,
+    CourseCategory? category,
+    CourseType? type,
+    bool? isActive,
+    bool? isCompleted,
+    bool? isEnrolled,
+    String? paymentId,
+    String? paymentDate,
+    String? meetingLink,
+    Map<String, dynamic>? rawData,
+  }) {
+    return Course(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      hours: hours ?? this.hours,
+      hasCertificate: hasCertificate ?? this.hasCertificate,
+      maxPlaces: maxPlaces ?? this.maxPlaces,
+      rating: rating ?? this.rating,
+      photoPath: photoPath ?? this.photoPath,
+      category: category ?? this.category,
+      type: type ?? this.type,
+      isActive: isActive ?? this.isActive,
+      isCompleted: isCompleted ?? this.isCompleted,
+      isEnrolled: isEnrolled ?? this.isEnrolled,
+      paymentId: paymentId ?? this.paymentId,
+      paymentDate: paymentDate ?? this.paymentDate,
+      meetingLink: meetingLink ?? this.meetingLink,
+      rawData: rawData ?? this.rawData,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Course(id: $id, name: $name, price: $price, hours: $hours, meetingLink: $meetingLink)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Course && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// данный класс представляет категорию курса
@@ -129,20 +212,49 @@ class CourseCategory {
       name: json['course_category_name']?.toString() ?? 'Категория',
     );
   }
+
+  /// данная функция создает JSON из объекта
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'course_category_name': name,
+    };
+  }
+
+  @override
+  String toString() => 'CourseCategory(id: $id, name: $name)';
 }
 
 /// данный класс представляет тип курса
 class CourseType {
   final int id;
   final String name;
+  final String? description;
 
-  CourseType({required this.id, required this.name});
+  CourseType({
+    required this.id, 
+    required this.name,
+    this.description,
+  });
 
   /// данная функция создает объект типа из JSON
   factory CourseType.fromJson(Map<String, dynamic> json) {
     return CourseType(
       id: json['id'] ?? 0,
       name: json['course_type_name']?.toString() ?? 'Тип',
+      description: json['course_type_description']?.toString(),
     );
   }
+
+  /// данная функция создает JSON из объекта
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'course_type_name': name,
+      'course_type_description': description,
+    };
+  }
+
+  @override
+  String toString() => 'CourseType(id: $id, name: $name)';
 }
